@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<form xmlns:xxi="http://orbeon.org/oxf/xml/xinclude"
+      xmlns:xh="http://www.w3.org/1999/xhtml"
+      xmlns:ev="http://www.w3.org/2001/xml-events"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      xmlns:xhtml="http://www.w3.org/1999/xhtml"
+      xmlns:saxon="http://saxon.sf.net/"
+      xmlns:xs="http://www.w3.org/2001/XMLSchema"
+      xmlns:xbl="http://www.w3.org/ns/xbl"
+      xmlns:xxf="http://orbeon.org/oxf/xml/xforms"
+      xmlns:sql="http://orbeon.org/oxf/xml/sql"
+      xmlns:iatfr="http://xml/insee.fr/xslt/apply-templates/form-runner"
+      xmlns:p="http://www.orbeon.com/oxf/pipeline"
+      xmlns:fr="http://orbeon.org/oxf/xml/form-runner"
+      xmlns:soap="http://schemas.xmlsoap.org/soap/envelope"
+      xmlns:xf="http://www.w3.org/2002/xforms"
+      xmlns:fn="http://www.w3.org/2005/xpath-functions"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:exf="http://www.exforms.org/exf/1-0">
+   <ACCUEIL>
+      <ACCUEIL-1/>
+      <ACCUEIL-2/>
+      <ACCUEIL-3/>
+      <ACCUEIL-4/>
+      <ACCUEIL-5/>
+      <ACCUEIL-6/>
+      <ACCUEIL-7/>
+   </ACCUEIL>
+   <INSEE-COLTRANE-QUEST-DEBUT>
+      <INSEE-COLTRANE-SEQ-0-1/>
+      <Variable idVariable="COMMENT_UE"/>
+      <Identification/>
+      <Identification-1/>
+      <Identification-2/>
+      <Identification-3/>
+   </INSEE-COLTRANE-QUEST-DEBUT>
+   <Variable idVariable="CONCERN2"/>
+   <Variable idVariable="REFER"/>
+   <Variable idVariable="PORTE"/>
+   <Variable idVariable="MOIS"/>
+   <DARES-ACEMO-SEQ-1>
+      <DARES-ACEMO-SEQ-1-DARES-ACEMO-II-12-1/>
+      <DARES-ACEMO-SEQ-11/>
+      <Variable idVariable="EFFTOT"/>
+      <DARES-ACEMO-CI-11-1/>
+      <Variable idVariable="EFFCDD"/>
+      <DARES-ACEMO-CI-11-2/>
+      <DARES-ACEMO-CI-11-3/>
+      <DARES-ACEMO-SEQ-12/>
+      <DARES-ACEMO-SEQ-12-DARES-ACEMO-IC-12-1/>
+      <Variable idVariable="REMTRIM"/>
+      <Variable idVariable="PRIME"/>
+      <DARES-ACEMO-ITE-12-3-THEN>
+         <Variable idVariable="PRIMETRIM"/>
+      </DARES-ACEMO-ITE-12-3-THEN>
+      <DARES-ACEMO-SEQ-13/>
+      <DARES-ACEMO-SEQ-13-DARES-ACEMO-IC-12-1/>
+      <DARES-ACEMO-QC-13-1-DARES-ACEMO-II-13-1/>
+      <Variable idVariable="HEURSUP"/>
+      <Variable idVariable="EFFHS"/>
+      <DARES-ACEMO-QC-13-3-DARES-ACEMO-II-13-3/>
+      <Variable idVariable="HEURCOMP"/>
+      <DARES-ACEMO-SEQ-14/>
+      <DARES-ACEMO-SEQ-14-DARES-ACEMO-IC-12-1/>
+      <Variable idVariable="CHOMPART"/>
+      <DARES-ACEMO-ITE-14-2-THEN>
+         <Variable idVariable="INDCHOMP"/>
+      </DARES-ACEMO-ITE-14-2-THEN>
+   </DARES-ACEMO-SEQ-1>
+   <DARES-ACEMO-SEQ-2>
+      <DARES-ACEMO-SEQ-2-DARES-ACEMO-II-2-1/>
+      <DARES-ACEMO-CI-24-1/>
+      <DARES-ACEMO-SEQ-21/>
+      <Variable idVariable="EFFTP"/>
+      <DARES-ACEMO-CI-21-1/>
+      <DARES-ACEMO-SEQ-23/>
+      <DARES-ACEMO-QG-23/>
+      <DARES-ACEMO-QG-23-DARES-ACEMO-CL-23-1/>
+      <DARES-ACEMO-QG-23-DARES-ACEMO-CL-23-2/>
+      <Variable idVariable="NBJOURF"/>
+      <Variable idVariable="EFFDURF"/>
+      <DARES-ACEMO-CI-23-1/>
+      <DARES-ACEMO-CI-23-2/>
+      <DARES-ACEMO-SEQ-22/>
+      <DARES-ACEMO-QG-22-1/>
+      <DARES-ACEMO-QG-22-1-DARES-ACEMO-CL-7-1/>
+      <DARES-ACEMO-QG-22-1-DARES-ACEMO-CL-7-2/>
+      <Variable idVariable="DURTRIM1"/>
+      <DURTRIM1-layout-H/>
+      <DURTRIM1-layout-CH/>
+      <DURTRIM1-dateduration-constraint/>
+      <Variable idVariable="DURTRIM2"/>
+      <DURTRIM2-layout-H/>
+      <DURTRIM2-layout-CH/>
+      <DURTRIM2-dateduration-constraint/>
+      <Variable idVariable="DURTRIM3"/>
+      <DURTRIM3-layout-H/>
+      <DURTRIM3-layout-CH/>
+      <DURTRIM3-dateduration-constraint/>
+      <Variable idVariable="DURTRIM4"/>
+      <DURTRIM4-layout-H/>
+      <DURTRIM4-layout-CH/>
+      <DURTRIM4-dateduration-constraint/>
+      <Variable idVariable="EFFDURT1"/>
+      <Variable idVariable="EFFDURT2"/>
+      <Variable idVariable="EFFDURT3"/>
+      <Variable idVariable="EFFDURT4"/>
+      <DARES-ACEMO-CI-22-1/>
+   </DARES-ACEMO-SEQ-2>
+   <DARES-ACEMO-SEQ-4>
+      <Variable idVariable="EMPVAC"/>
+      <DARES-ACEMO-CI-41-1/>
+      <DARES-ACEMO-ITE-42-1-THEN>
+         <DARES-ACEMO-QG-42-1/>
+         <DARES-ACEMO-QG-42-1-DARES-ACEMO-CL-4-1/>
+         <DARES-ACEMO-QG-42-1-DARES-ACEMO-CL-4-2/>
+         <DARES-ACEMO-QG-42-1-DARES-ACEMO-CL-4-3/>
+         <DARES-ACEMO-QG-42-1-DARES-ACEMO-CL-4-4/>
+         <Variable idVariable="NBVAC"/>
+         <Variable idVariable="NBVACNC"/>
+         <Variable idVariable="NBVACIN"/>
+         <Variable idVariable="NBVACOC"/>
+         <DARES-ACEMO-CI-42-1/>
+         <DARES-ACEMO-CI-42-2/>
+      </DARES-ACEMO-ITE-42-1-THEN>
+   </DARES-ACEMO-SEQ-4>
+   <DARES-ACEMO-SEQ-8>
+      <DARES-ACEMO-SEQ-81/>
+      <Variable idVariable="FICC"/>
+      <DARES-ACEMO-ITE-81-1-THEN>
+         <DARES-ACEMO-QC-81-2-DARES-ACEMO-IC-71-1/>
+         <DARES-ACEMO-QG-81-1/>
+         <DARES-ACEMO-QG-81-1-DARES-ACEMO-CL-6-1/>
+         <DARES-ACEMO-QG-81-1-DARES-ACEMO-CL-6-2/>
+         <DARES-ACEMO-QG-81-1-DARES-ACEMO-CL-6-3/>
+         <DARES-ACEMO-QG-81-1-DARES-ACEMO-CL-6-4/>
+         <Variable idVariable="CC01"/>
+         <Variable idVariable="CONVEN401"/>
+         <Variable idVariable="INTITU01"/>
+         <Variable idVariable="EFFCC01"/>
+         <Variable idVariable="CC02"/>
+         <Variable idVariable="CONVEN402"/>
+         <Variable idVariable="INTITU02"/>
+         <Variable idVariable="EFFCC02"/>
+         <Variable idVariable="CC03"/>
+         <Variable idVariable="CONVEN403"/>
+         <Variable idVariable="INTITU03"/>
+         <Variable idVariable="EFFCC03"/>
+         <Variable idVariable="CC04"/>
+         <Variable idVariable="CONVEN404"/>
+         <Variable idVariable="INTITU04"/>
+         <Variable idVariable="EFFCC04"/>
+         <Variable idVariable="CC05"/>
+         <Variable idVariable="CONVEN405"/>
+         <Variable idVariable="INTITU05"/>
+         <Variable idVariable="EFFCC05"/>
+         <Variable idVariable="CC06"/>
+         <Variable idVariable="CONVEN406"/>
+         <Variable idVariable="INTITU06"/>
+         <Variable idVariable="EFFCC06"/>
+         <Variable idVariable="CC07"/>
+         <Variable idVariable="CONVEN407"/>
+         <Variable idVariable="INTITU07"/>
+         <Variable idVariable="EFFCC07"/>
+         <Variable idVariable="CC08"/>
+         <Variable idVariable="CONVEN408"/>
+         <Variable idVariable="INTITU08"/>
+         <Variable idVariable="EFFCC08"/>
+         <Variable idVariable="CC09"/>
+         <Variable idVariable="CONVEN409"/>
+         <Variable idVariable="INTITU09"/>
+         <Variable idVariable="EFFCC09"/>
+         <Variable idVariable="CC10"/>
+         <Variable idVariable="CONVEN410"/>
+         <Variable idVariable="INTITU10"/>
+         <Variable idVariable="EFFCC10"/>
+         <Variable idVariable="CC11"/>
+         <Variable idVariable="CONVEN411"/>
+         <Variable idVariable="INTITU11"/>
+         <Variable idVariable="EFFCC11"/>
+      </DARES-ACEMO-ITE-81-1-THEN>
+      <DARES-ACEMO-SEQ-82/>
+      <Variable idVariable="FILCE"/>
+      <DARES-ACEMO-ITE-82-2-THEN>
+         <Variable idVariable="LIBCE"/>
+         <Variable idVariable="EFFCE"/>
+      </DARES-ACEMO-ITE-82-2-THEN>
+      <DARES-ACEMO-SEQ-83/>
+      <Variable idVariable="FILST"/>
+      <DARES-ACEMO-ITE-83-2-THEN>
+         <Variable idVariable="LIBST"/>
+         <Variable idVariable="EFFST"/>
+      </DARES-ACEMO-ITE-83-2-THEN>
+   </DARES-ACEMO-SEQ-8>
+   <DARES-ACEMO-SEQ-9>
+      <DARES-ACEMO-QG-9/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-entete-1/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-entete-2/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-1/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-6/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-7/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-8/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-5/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-2/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-10/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-11/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-12/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-9/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-3/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-14/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-15/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-16/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-13/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-4/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-18/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-19/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-20/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-17/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-12-21/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-9-1/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-10-entete-1/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-10-1/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-10-2/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-10-3/>
+      <DARES-ACEMO-QG-9-DARES-ACEMO-CL-10-4/>
+      <Variable idVariable="EFF01"/>
+      <Variable idVariable="EFF02"/>
+      <Variable idVariable="EFF03"/>
+      <Variable idVariable="OUVEFFTO"/>
+      <Variable idVariable="EFF04"/>
+      <Variable idVariable="EFF05"/>
+      <Variable idVariable="EFF06"/>
+      <Variable idVariable="EMPEFFTO"/>
+      <Variable idVariable="EFF07"/>
+      <Variable idVariable="EFF08"/>
+      <Variable idVariable="EFF09"/>
+      <Variable idVariable="PRIEFFTO"/>
+      <Variable idVariable="EFF10"/>
+      <Variable idVariable="EFF11"/>
+      <Variable idVariable="EFF12"/>
+      <Variable idVariable="CADEFFTO"/>
+      <Variable idVariable="ENSEFFTO"/>
+      <Variable idVariable="LIBEMP01"/>
+      <Variable idVariable="LIBEMP02"/>
+      <Variable idVariable="LIBEMP03"/>
+      <Variable idVariable="LIBEMP04"/>
+      <Variable idVariable="LIBEMP05"/>
+      <Variable idVariable="LIBEMP06"/>
+      <Variable idVariable="LIBEMP07"/>
+      <Variable idVariable="LIBEMP08"/>
+      <Variable idVariable="LIBEMP09"/>
+      <Variable idVariable="LIBEMP10"/>
+      <Variable idVariable="LIBEMP11"/>
+      <Variable idVariable="LIBEMP12"/>
+      <Variable idVariable="COEF01"/>
+      <Variable idVariable="COEF02"/>
+      <Variable idVariable="COEF03"/>
+      <Variable idVariable="COEF04"/>
+      <Variable idVariable="COEF05"/>
+      <Variable idVariable="COEF06"/>
+      <Variable idVariable="COEF07"/>
+      <Variable idVariable="COEF08"/>
+      <Variable idVariable="COEF09"/>
+      <Variable idVariable="COEF10"/>
+      <Variable idVariable="COEF11"/>
+      <Variable idVariable="COEF12"/>
+      <Variable idVariable="SALM01"/>
+      <Variable idVariable="SALM02"/>
+      <Variable idVariable="SALM03"/>
+      <Variable idVariable="SALM04"/>
+      <Variable idVariable="SALM05"/>
+      <Variable idVariable="SALM06"/>
+      <Variable idVariable="SALM07"/>
+      <Variable idVariable="SALM08"/>
+      <Variable idVariable="SALM09"/>
+      <Variable idVariable="SALM10"/>
+      <Variable idVariable="SALM11"/>
+      <Variable idVariable="SALM12"/>
+      <Variable idVariable="HORM01"/>
+      <Variable idVariable="HORM02"/>
+      <Variable idVariable="HORM03"/>
+      <Variable idVariable="HORM04"/>
+      <Variable idVariable="HORM05"/>
+      <Variable idVariable="HORM06"/>
+      <Variable idVariable="HORM07"/>
+      <Variable idVariable="HORM08"/>
+      <Variable idVariable="HORM09"/>
+      <Variable idVariable="HORM10"/>
+      <Variable idVariable="HORM11"/>
+      <Variable idVariable="HORM12"/>
+      <DARES-ACEMO-SEQ-9-1-DARES-ACEMO-II-8-5/>
+      <DARES-ACEMO-SEQ-9-1-DARES-ACEMO-IF-8/>
+      <DARES-ACEMO-SEQ-9-1-DARES-ACEMO-IF-3/>
+   </DARES-ACEMO-SEQ-9>
+   <INSEE-COLTRANE-TEMPS>
+      <INSEE-COLTRANE-TEMPS-QI-1/>
+      <Variable idVariable="HEURE_REMPL"/>
+      <Variable idVariable="MIN_REMPL"/>
+      <Variable idVariable="COMMENT_QE"/>
+   </INSEE-COLTRANE-TEMPS>
+   <VALIDATION/>
+   <CONFIRMATION/>
+   <FIN/>
+   <stromae>
+      <util>
+         <sectionCourante>1</sectionCourante>
+         <nomSectionCourante/>
+         <expedie>non</expedie>
+         <extrait>non</extrait>
+         <dateHeure/>
+      </util>
+      <perso/>
+   </stromae>
+</form>

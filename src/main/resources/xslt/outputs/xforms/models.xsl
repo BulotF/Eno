@@ -160,6 +160,20 @@
         </xd:desc>
     </xd:doc>
     <xsl:template match="GoTo" mode="model"/>
+    <xsl:template match="RosterDimension" mode="model"/>
+
+    <xd:doc>
+        <xd:desc>
+            <xd:p>CodeList in Response just lead to their children.</xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:template match="CodeList[ancestor::CodeDomain]" mode="model">
+        <xsl:param name="source-context" as="item()" tunnel="yes"/>
+
+        <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
+            <xsl:with-param name="driver" select="." tunnel="yes"/>
+        </xsl:apply-templates>
+    </xsl:template>
 
     <xd:doc>
         <xd:desc>
@@ -180,6 +194,89 @@
         <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
             <xsl:with-param name="driver" select="." tunnel="yes"/>
         </xsl:apply-templates>
+    </xsl:template>
+
+    <xd:doc>
+        <xd:desc>Template for Instance for Table</xd:desc>
+    </xd:doc>
+    <xsl:template match="Instance//Table" mode="model">
+        <xsl:param name="source-context" as="item()" tunnel="yes"/>
+        <xsl:variable name="ancestors">
+            <xsl:copy-of select="root(.)"/>
+        </xsl:variable>
+        <xsl:element name="{enoxforms:get-name($source-context)}"/>
+        <xsl:for-each select="enoxforms:get-header-lines($source-context)">
+            <xsl:apply-templates select="enoxforms:get-header-line($source-context, position())" mode="source">
+                <xsl:with-param name="driver" select="$ancestors//*[not(child::*) and not(name() = 'driver')]" tunnel="yes"/>
+            </xsl:apply-templates>
+        </xsl:for-each>
+        <xsl:for-each select="enoxforms:get-body-lines($source-context)">
+            <xsl:apply-templates select="enoxforms:get-body-line($source-context, position())" mode="source">
+                <xsl:with-param name="driver" select="$ancestors//*[not(child::*) and not(name() = 'driver')]" tunnel="yes"/>
+            </xsl:apply-templates>
+        </xsl:for-each>
+    </xsl:template>
+
+    <xd:doc>
+        <xd:desc>Template for Instance for Table</xd:desc>
+    </xd:doc>
+    <xsl:template match="Instance//TableLoop" mode="model">
+        <xsl:param name="source-context" as="item()" tunnel="yes"/>
+        <xsl:variable name="ancestors">
+            <xsl:copy-of select="root(.)"/>
+        </xsl:variable>
+        <xsl:variable name="name" select="enoxforms:get-business-name($source-context)"/>
+
+        <xsl:element name="{enoxforms:get-name($source-context)}"/>
+        <xsl:for-each select="enoxforms:get-header-lines($source-context)">
+            <xsl:apply-templates select="enoxforms:get-header-line($source-context, position())" mode="source">
+                <xsl:with-param name="driver" select="$ancestors//*[not(child::*) and not(name() = 'driver')]" tunnel="yes"/>
+            </xsl:apply-templates>
+        </xsl:for-each>
+        <xsl:element name="{enoxforms:get-container-name($source-context)}">
+            <xsl:element name="{$name}">
+                <xsl:attribute name="occurrence-id" select="concat($name,'-1')"/>
+                <xsl:apply-templates select="enoxforms:get-external-variables($source-context)" mode="source">
+                    <xsl:with-param name="driver" select="." tunnel="yes"/>
+                </xsl:apply-templates>
+                <xsl:for-each select="enoxforms:get-body-lines($source-context)">
+                    <xsl:apply-templates select="enoxforms:get-body-line($source-context, position())" mode="source">
+                        <xsl:with-param name="driver" select="$ancestors//*[not(child::*) and not(name() = 'driver')]" tunnel="yes"/>
+                    </xsl:apply-templates>
+                </xsl:for-each>
+            </xsl:element>
+        </xsl:element>
+        <xsl:if test="enoxforms:get-linked-containers($source-context)[1] = enoxforms:get-container-name($source-context)">
+            <xsl:element name="{$name}-Count">
+                <xsl:value-of select="enoxforms:get-minimum-lines($source-context)"/>
+            </xsl:element>
+        </xsl:if>
+        <xsl:if test="not(enoxforms:get-maximum-lines($source-context)!='') or (number(enoxforms:get-minimum-lines($source-context)) &lt; number(enoxforms:get-maximum-lines($source-context)))">
+            <xsl:element name="{enoxforms:get-business-name($source-context)}-AddLine"/>
+        </xsl:if>
+    </xsl:template>
+
+    <xd:doc>
+        <xd:desc>
+            <xd:p>Template for Instance for the drivers of table headers.</xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:template match="Instance//CodeDimension | Instance//Code[not(ancestor::CodeDomain or ancestor::BooleanDomain)]" mode="model">
+        <xsl:param name="source-context" as="item()" tunnel="yes"/>
+        <xsl:variable name="name" select="enoxforms:get-cell-name($source-context)"/>
+        <xsl:if test="$name != ''">
+            <xsl:element name="{$name}"/>
+        </xsl:if>
+    </xsl:template>
+    <xsl:template match="Instance//CodeList[not(ancestor::CodeDomain)]" mode="model">
+        <xsl:param name="source-context" as="item()" tunnel="yes"/>
+        <xsl:param name="languages" tunnel="yes"/>
+        <xsl:variable name="name" select="enoxforms:get-cell-name($source-context)"/>
+        <xsl:if test="$name != ''">
+            <xsl:for-each select="enoxforms:get-label($source-context,$languages)">
+                <xsl:element name="{$name}-{position()}"/>
+            </xsl:for-each>
+        </xsl:if>
     </xsl:template>
 
     <xd:doc>
@@ -228,32 +325,6 @@
 
     <xd:doc>
         <xd:desc>
-            <xd:p>Special template for Instance for the RowLoop driver.</xd:p>
-        </xd:desc>
-    </xd:doc>
-    <xsl:template match="Instance//RowLoop" mode="model">
-        <xsl:param name="source-context" as="item()" tunnel="yes"/>
-        <xsl:variable name="name" select="enoxforms:get-name($source-context)"/>
-        <xsl:element name="{enoxforms:get-container-name($source-context)}">
-            <xsl:element name="{$name}">
-                <xsl:attribute name="occurrence-id" select="concat($name,'-1')"/>
-                <xsl:apply-templates select="enoxforms:get-external-variables($source-context)" mode="source">
-                    <xsl:with-param name="driver" select="." tunnel="yes"/>
-                </xsl:apply-templates>
-                <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-                    <xsl:with-param name="driver" select="." tunnel="yes"/>
-                </xsl:apply-templates>
-            </xsl:element>
-        </xsl:element>
-        <xsl:if test="enoxforms:get-linked-containers($source-context)[1] = enoxforms:get-container-name($source-context)">
-            <xsl:element name="{$name}-Count">
-                <xsl:value-of select="enoxforms:get-minimum-lines($source-context)"/>
-            </xsl:element>
-        </xsl:if>
-    </xsl:template>
-
-    <xd:doc>
-        <xd:desc>
             <xd:p>Template for Instance for those drivers.</xd:p>
             <xd:p>The element is created and we continue to parse the input tree next within the created element.</xd:p>
         </xd:desc>
@@ -274,24 +345,6 @@
                 <xsl:value-of select="enoxforms:get-minimum-occurrences($source-context)"/>
             </xsl:element>
             <xsl:element name="{enoxforms:get-name($source-context)}-AddOccurrence"/>
-        </xsl:if>
-    </xsl:template>
-
-    <xd:doc>
-        <xd:desc>
-            <xd:p>Special template for Instance for the TableLoop driver.</xd:p>
-        </xd:desc>
-    </xd:doc>
-    <xsl:template match="Instance//TableLoop" mode="model">
-        <xsl:param name="source-context" as="item()" tunnel="yes"/>
-        <xsl:variable name="name" select="enoxforms:get-name($source-context)"/>
-
-        <xsl:element name="{$name}"/>
-        <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-            <xsl:with-param name="driver" select="." tunnel="yes"/>
-        </xsl:apply-templates>
-        <xsl:if test="not(enoxforms:get-maximum-lines($source-context)!='') or (number(enoxforms:get-minimum-lines($source-context)) &lt; number(enoxforms:get-maximum-lines($source-context)))">
-            <xsl:element name="{enoxforms:get-business-name($source-context)}-AddLine"/>
         </xsl:if>
     </xsl:template>
 
@@ -342,16 +395,16 @@
 
     <xd:doc>
         <xd:desc>
-            <xd:p>Template for RowLoop and QuestionLoop.</xd:p>
+            <xd:p>Template for QuestionLoop.</xd:p>
             <xd:p>An element is created and we copy the Instance part into this model.</xd:p>
             <xd:p>It goes down the tree to check if there are no other loops.</xd:p>
         </xd:desc>
     </xd:doc>
-    <xsl:template match="Model//RowLoop | Model//QuestionLoop" mode="model">
+    <xsl:template match="Model//QuestionLoop" mode="model">
         <xsl:param name="source-context" as="item()" tunnel="yes"/>
         <!-- create element with same name and acts like what is done for the instance part -->
         <xsl:element name="{enoxforms:get-container-name($source-context)}">
-            <xsl:element name="{enoxforms:get-name($source-context)}">
+            <xsl:element name="{enoxforms:get-business-name($source-context)}">
                 <xsl:attribute name="occurrence-id"/>
                 <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
                     <xsl:with-param name="driver" select="eno:append-empty-element('Instance', .)" tunnel="yes"/>
@@ -362,6 +415,36 @@
         <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
             <xsl:with-param name="driver" select="." tunnel="yes"/>
         </xsl:apply-templates>
+    </xsl:template>
+
+    <xd:doc>
+        <xd:desc>
+            <xd:p>Template for TableLoop.</xd:p>
+            <xd:p>An element is created and we copy the Instance part into this model.</xd:p>
+            <xd:p>It goes down the tree to check if there are no other loops.</xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:template match="Model//TableLoop" mode="model">
+        <xsl:param name="source-context" as="item()" tunnel="yes"/>
+
+        <xsl:variable name="ancestors">
+            <xsl:copy-of select="root(.)"/>
+        </xsl:variable>
+        <xsl:variable name="name" select="enoxforms:get-business-name($source-context)"/>
+
+        <xsl:element name="{enoxforms:get-container-name($source-context)}">
+            <xsl:element name="{$name}">
+                <xsl:attribute name="occurrence-id"/>
+                <xsl:apply-templates select="enoxforms:get-external-variables($source-context)" mode="source">
+                    <xsl:with-param name="driver" select="eno:append-empty-element('Instance', .)" tunnel="yes"/>
+                </xsl:apply-templates>
+                <xsl:for-each select="enoxforms:get-body-lines($source-context)">
+                    <xsl:apply-templates select="enoxforms:get-body-line($source-context, position())" mode="source">
+                        <xsl:with-param name="driver" select="eno:append-empty-element('Instance',$ancestors//*[not(child::*) and not(name() = 'driver')])" tunnel="yes"/>
+                    </xsl:apply-templates>
+                </xsl:for-each>
+            </xsl:element>
+        </xsl:element>
     </xsl:template>
 
     <xd:doc>
@@ -498,6 +581,35 @@
         <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
             <xsl:with-param name="driver" select="." tunnel="yes"/>
         </xsl:apply-templates>
+    </xsl:template>
+
+    <xd:doc>
+        <xd:desc>
+            <xd:p>Default template for Bind for the drivers.</xd:p>
+            <xd:p>It builds the bind by using different enofr functions then the process goes on next to the created bind.</xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:template match="Bind//CodeDimension | Bind//Code[not(ancestor::CodeDomain or ancestor::BooleanDomain)]" mode="model">
+        <xsl:param name="source-context" as="item()" tunnel="yes"/>
+
+        <xsl:variable name="name" select="enoxforms:get-cell-name($source-context)"/>
+        <xsl:variable name="type" select="enoxforms:get-type($source-context)"/>
+
+        <xsl:if test="$name != ''">
+            <xf:bind id="{$name}-bind" name="{$name}" ref="{$name}"/>
+        </xsl:if>
+    </xsl:template>
+    <xsl:template match="Bind//CodeList[not(ancestor::CodeDomain)]" mode="model">
+        <xsl:param name="source-context" as="item()" tunnel="yes"/>
+        <xsl:param name="languages" tunnel="yes"/>
+        <xsl:variable name="name" select="enoxforms:get-cell-name($source-context)"/>
+        <xsl:variable name="type" select="enoxforms:get-type($source-context)"/>
+
+        <xsl:if test="$name != ''">
+            <xsl:for-each select="enoxforms:get-label($source-context,$languages)">
+                <xf:bind id="{$name}-{position()}-bind" name="{$name}-{position()}" ref="{$name}-{position()}"/>
+            </xsl:for-each>
+        </xsl:if>
     </xsl:template>
 
     <xd:doc>
@@ -966,38 +1078,10 @@
             <xd:p>It builds the bind then the process goes on within the created bind.</xd:p>
         </xd:desc>
     </xd:doc>
-    <xsl:template match="Bind//RowLoop" mode="model">
-        <xsl:param name="source-context" as="item()" tunnel="yes"/>
-        <xsl:param name="instance-ancestor" tunnel="yes"/>
-
-        <xsl:variable name="name" select="enoxforms:get-name($source-context)"/>
-        <xsl:variable name="business-name" select="enoxforms:get-business-name($source-context)"/>
-        <xsl:variable name="container" select="enoxforms:get-container-name($source-context)"/>
-        
-        <xf:bind id="{$container}-bind" name="{$container}" nodeset="{$container}/{$name}">
-            <xsl:apply-templates select="enoxforms:get-external-variables($source-context)" mode="source">
-                <xsl:with-param name="driver" select="." tunnel="yes"/>
-                <xsl:with-param name="instance-ancestor" select="if ($instance-ancestor='') then $business-name else concat($instance-ancestor,' ',$business-name)" tunnel="yes"/>
-            </xsl:apply-templates>
-            <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-                <xsl:with-param name="driver" select="." tunnel="yes"/>
-                <!-- the absolute address of the element in enriched for RowLoop and QuestionLoop, for which several instances are possible -->
-                <xsl:with-param name="instance-ancestor" select="if ($instance-ancestor='') then $business-name else concat($instance-ancestor,' ',$business-name)" tunnel="yes"/>
-            </xsl:apply-templates>
-        </xf:bind>
-    </xsl:template>
-    
-    <xd:doc>
-        <xd:desc>
-            <xd:p>Template for Bind for the following drivers.</xd:p>
-            <xd:p>It uses the nodeset attribute instead of the ref attribute.</xd:p>
-            <xd:p>It builds the bind then the process goes on within the created bind.</xd:p>
-        </xd:desc>
-    </xd:doc>
     <xsl:template match="Bind//QuestionLoop" mode="model">
         <xsl:param name="source-context" as="item()" tunnel="yes"/>
         <xsl:param name="instance-ancestor" tunnel="yes"/>
-        
+
         <xsl:variable name="name" select="enoxforms:get-name($source-context)"/>
         <xsl:variable name="business-name" select="enoxforms:get-business-name($source-context)"/>
         <xsl:variable name="container" select="enoxforms:get-container-name($source-context)"/>
@@ -1007,7 +1091,7 @@
                 <xsl:value-of select="concat(.,'[@occurrence-id = current()/ancestor::',.,'/@occurrence-id]//')"/>
             </xsl:for-each>
         </xsl:variable>
-        
+
         <xf:bind id="{$container}-bind" name="{$container}" nodeset="{$container}/{$name}">
             <xsl:apply-templates select="enoxforms:get-external-variables($source-context)" mode="source">
                 <xsl:with-param name="driver" select="." tunnel="yes"/>
@@ -1015,7 +1099,7 @@
             </xsl:apply-templates>
             <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
                 <xsl:with-param name="driver" select="." tunnel="yes"/>
-                <!-- the absolute address of the element in enriched for RowLoop and QuestionLoop, for which several instances are possible -->
+                <!-- the absolute address of the element in enriched for TableLoop and QuestionLoop, for which several instances are possible -->
                 <xsl:with-param name="instance-ancestor" select="if ($instance-ancestor='') then $business-name else concat($instance-ancestor,' ',$business-name)" tunnel="yes"/>
             </xsl:apply-templates>
         </xf:bind>
@@ -1047,12 +1131,41 @@
             <xd:p>Template for Bind for the following drivers.</xd:p>
         </xd:desc>
     </xd:doc>
-    <xsl:template match="Bind//Table | Bind//TableLoop" mode="model">
+    <xsl:template match="Bind//Table" mode="model">
+        <xsl:param name="source-context" as="item()" tunnel="yes"/>
+
+        <xsl:variable name="name" select="enoxforms:get-name($source-context)"/>
+        <xsl:variable name="ancestors">
+            <xsl:copy-of select="root(.)"/>
+        </xsl:variable>
+
+        <xf:bind id="{$name}-bind" name="{$name}" ref="{$name}"/>
+        <xsl:for-each select="enoxforms:get-header-lines($source-context)">
+            <xsl:apply-templates select="enoxforms:get-header-line($source-context, position())" mode="source">
+                <xsl:with-param name="driver" select="$ancestors//*[not(child::*) and not(name() = 'driver')]" tunnel="yes"/>
+            </xsl:apply-templates>
+        </xsl:for-each>
+        <xsl:for-each select="enoxforms:get-body-lines($source-context)">
+            <xsl:apply-templates select="enoxforms:get-body-line($source-context, position())" mode="source">
+                <xsl:with-param name="driver" select="$ancestors//*[not(child::*) and not(name() = 'driver')]" tunnel="yes"/>
+            </xsl:apply-templates>
+        </xsl:for-each>
+    </xsl:template>
+
+    <xd:doc>
+        <xd:desc>
+            <xd:p>Template for Bind for the following drivers.</xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:template match="Bind//TableLoop" mode="model">
         <xsl:param name="source-context" as="item()" tunnel="yes"/>
         <xsl:param name="instance-ancestor" tunnel="yes"/>
         <xsl:variable name="name" select="enoxforms:get-name($source-context)"/>
         <xsl:variable name="business-name" select="enoxforms:get-business-name($source-context)"/>
         <xsl:variable name="container" select="enoxforms:get-container-name($source-context)"/>
+        <xsl:variable name="ancestors">
+            <xsl:copy-of select="root(.)"/>
+        </xsl:variable>
         <xsl:variable name="instance-ancestor-label">
             <xsl:value-of select="'instance(''fr-form-instance'')//'"/>
             <xsl:for-each select="tokenize($instance-ancestor,' ')">
@@ -1061,9 +1174,24 @@
         </xsl:variable>
 
         <xf:bind id="{$name}-bind" name="{$name}" ref="{$name}"/>
-        <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-            <xsl:with-param name="driver" select="." tunnel="yes"/>
-        </xsl:apply-templates>
+        <xsl:for-each select="enoxforms:get-header-lines($source-context)">
+            <xsl:apply-templates select="enoxforms:get-header-line($source-context, position())" mode="source">
+                <xsl:with-param name="driver" select="$ancestors//*[not(child::*) and not(name() = 'driver')]" tunnel="yes"/>
+            </xsl:apply-templates>
+        </xsl:for-each>
+
+        <xf:bind id="{$container}-bind" name="{$container}" nodeset="{$container}/{$business-name}">
+            <xsl:apply-templates select="enoxforms:get-external-variables($source-context)" mode="source">
+                <xsl:with-param name="driver" select="$ancestors//*[not(child::*) and not(name() = 'driver')]" tunnel="yes"/>
+                <xsl:with-param name="instance-ancestor" select="if ($instance-ancestor='') then $business-name else concat($instance-ancestor,' ',$business-name)" tunnel="yes"/>
+            </xsl:apply-templates>
+            <xsl:for-each select="enoxforms:get-body-lines($source-context)">
+                <xsl:apply-templates select="enoxforms:get-body-line($source-context, position())" mode="source">
+                    <xsl:with-param name="driver" select="$ancestors//*[not(child::*) and not(name() = 'driver')]" tunnel="yes"/>
+                    <xsl:with-param name="instance-ancestor" select="if ($instance-ancestor='') then $business-name else concat($instance-ancestor,' ',$business-name)" tunnel="yes"/>
+                </xsl:apply-templates>
+            </xsl:for-each>
+        </xf:bind>
         <xsl:choose>
             <xsl:when test="not(enoxforms:get-maximum-lines($source-context)!='') and enoxforms:get-minimum-lines($source-context)!=''">
                 <xf:bind id="{$business-name}-addline-bind" ref="{$business-name}-AddLine"/>
@@ -1411,6 +1539,50 @@
 
     <xd:doc>
         <xd:desc>
+            <xd:p>Template for Resource for the drivers of table headers.</xd:p>
+        </xd:desc>
+    </xd:doc>
+    <xsl:template match="Resource//CodeDimension[not(ancestor::ResourceItem)] | Resource//Code[not(ancestor::ResourceItem) and not(ancestor::CodeDomain or ancestor::BooleanDomain) and (ancestor::Table or ancestor::TableLoop)]" mode="model">
+        <xsl:param name="source-context" as="item()" tunnel="yes"/>
+        <xsl:param name="language" tunnel="yes"/>
+
+        <xsl:variable name="label" select="enoxforms:get-label($source-context, $language)"/>
+
+        <xsl:if test="$label!=''">
+            <xsl:element name="{enoxforms:get-cell-name($source-context)}">
+                <label>
+                    <xsl:value-of select="eno:serialize($label)"/>
+                </label>
+            </xsl:element>
+        </xsl:if>
+        <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
+            <xsl:with-param name="driver" select="." tunnel="yes"/>
+        </xsl:apply-templates>
+    </xsl:template>
+    <xsl:template match="Resource//CodeList[not(ancestor::ResourceItem) and not(ancestor::CodeDomain)]" mode="model">
+        <xsl:param name="source-context" as="item()" tunnel="yes"/>
+        <xsl:param name="language" tunnel="yes"/>
+
+        <xsl:variable name="name" select="enoxforms:get-cell-name($source-context)"/>
+        <xsl:if test="$name != ''">
+            <xsl:if test="enoxforms:is-codelist-label-shown($source-context)">
+                <xsl:message select="concat(enoxforms:get-cell-name($source-context),eno:serialize(enoxforms:get-label($source-context, $language)),enoxforms:get-cell-name($source-context))"/>
+                <xsl:for-each select="enoxforms:get-label($source-context, $language)">
+                    <xsl:element name="{$name}-{position()}">
+                        <label>
+                            <xsl:value-of select="eno:serialize(.)"/>
+                        </label>
+                    </xsl:element>
+                </xsl:for-each>
+            </xsl:if>
+        </xsl:if>
+        <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
+            <xsl:with-param name="driver" select="." tunnel="yes"/>
+        </xsl:apply-templates>
+    </xsl:template>
+
+    <xd:doc>
+        <xd:desc>
             <xd:p>Template for Resource for the driver ConsistencyCheck.</xd:p>
         </xd:desc>
     </xd:doc>
@@ -1431,29 +1603,16 @@
             <xsl:with-param name="driver" select="." tunnel="yes"/>
         </xsl:apply-templates>
     </xsl:template>
-    
-    <xd:doc>
-        <xd:desc>
-            <xd:p>Template for Resource for the drivers QuestionLoop and Rowloop.</xd:p>
-        </xd:desc>
-    </xd:doc>
-    <xsl:template match="Resource//RowLoop" mode="model">
-        <xsl:param name="source-context" as="item()" tunnel="yes"/>
 
-        <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-            <xsl:with-param name="driver" select="." tunnel="yes"/>
-        </xsl:apply-templates>
-    </xsl:template>
-    
     <xd:doc>
         <xd:desc>
-            <xd:p>Template for Resource for the drivers QuestionLoop and Rowloop.</xd:p>
+            <xd:p>Template for Resource for the driver QuestionLoop.</xd:p>
         </xd:desc>
     </xd:doc>
     <xsl:template match="Resource//QuestionLoop" mode="model">
         <xsl:param name="source-context" as="item()" tunnel="yes"/>
         <xsl:param name="language" tunnel="yes"/>
-        
+
         <xsl:if test="enoxforms:get-linked-containers($source-context)[1] = enoxforms:get-container-name($source-context)">
             <xsl:element name="{enoxforms:get-name($source-context)}-AddOccurrence">
                 <label>
@@ -1478,7 +1637,7 @@
         <xsl:variable name="label" select="eno:serialize(enoxforms:get-label($source-context, $language))"/>
         <xsl:variable name="value" select="eno:serialize(enoxforms:get-cell-value($source-context))"/>
 
-        <xsl:element name="{enoxforms:get-name($source-context)}">
+        <xsl:element name="{enoxforms:get-cell-name($source-context)}">
             <label>
                 <xsl:choose>
                     <xsl:when test="$label != '' and $value !=''">
@@ -1510,10 +1669,10 @@
 
     <xd:doc>
         <xd:desc>
-            <xd:p>Template for ResourceItem for xf-item driver.</xd:p>
+            <xd:p>Template for ResourceItem for Code driver from CodeDomain or BooleanDomain.</xd:p>
         </xd:desc>
     </xd:doc>
-    <xsl:template match="ResourceItem//xf-item" mode="model">
+    <xsl:template match="ResourceItem//Code[ancestor::CodeDomain or ancestor::BooleanDomain]" mode="model">
         <xsl:param name="source-context" as="item()" tunnel="yes"/>
         <xsl:param name="language" tunnel="yes"/>
 
@@ -1543,16 +1702,16 @@
 
     <xd:doc>
         <xd:desc>
-            <xd:p>The xf-item driver produces something only in the ResourceItem part.</xd:p>
+            <xd:p>The Code from CodeDomain or BooleanDomain driver produces something only in the ResourceItem part.</xd:p>
         </xd:desc>
     </xd:doc>
-    <xsl:template match="*[name() = ('Instance', 'Bind', 'Body')]//xf-item" mode="model">
+    <xsl:template match="*[name() = ('Instance', 'Bind', 'Body')]//Code[ancestor::CodeDomain or ancestor::BooleanDomain]" mode="model">
         <xsl:param name="source-context" as="item()" tunnel="yes"/>
         <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
             <xsl:with-param name="driver" select="." tunnel="yes"/>
         </xsl:apply-templates>
     </xsl:template>
-    <xsl:template match="Resource//xf-item[not(ancestor::ResourceItem)]" mode="model">
+    <xsl:template match="Resource//Code[(ancestor::CodeDomain or ancestor::BooleanDomain) and not(ancestor::ResourceItem)]" mode="model">
         <xsl:param name="source-context" as="item()" tunnel="yes"/>
         <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
             <xsl:with-param name="driver" select="." tunnel="yes"/>
@@ -1887,148 +2046,149 @@
             </xsl:choose>
         </xsl:variable>
 
-        <xsl:element name="{$xforms-element}">
-            <xsl:attribute name="id" select="concat($name, '-control')"/>
-            <xsl:attribute name="name" select="$name"/>
-            <xsl:attribute name="bind" select="concat($name, '-bind')"/>
-            <xsl:if test="$appearance != ''">
-                <xsl:choose>
-                    <xsl:when test="$appearance = 'drop-down-list'">
-                        <xsl:attribute name="appearance" select="'minimal'"/>
-                    </xsl:when>
-                    <xsl:otherwise>
-                        <xsl:attribute name="appearance" select="'full'"/>
-                    </xsl:otherwise>
-                </xsl:choose>
-            </xsl:if>
-            <xsl:if test="$css-class != '' or $question-label!=''">
-                <xsl:choose>
-                    <xsl:when test="$question-label!='' and $css-class!=''">
-                        <xsl:attribute name="class" select="concat('question ',$css-class)"/>
-                    </xsl:when>
-                    <xsl:when test="$question-label !=''">
-                        <xsl:attribute name="class" select="'question'"/>
-                    </xsl:when>
-                    <xsl:otherwise>
-                        <xsl:attribute name="class" select="$css-class"/>
-                    </xsl:otherwise>
-                </xsl:choose>
-            </xsl:if>
-            <xsl:if test="not($length = '')">
-                <xsl:attribute name="xxf:maxlength" select="$length"/>
-            </xsl:if>
-            <xsl:if test="self::NumericDomain">
-                <xsl:attribute name="grouping-separator" select="' '"/>
-                <xsl:choose>
-                    <xsl:when test="number(enoxforms:get-number-of-decimals($source-context)) &gt; 0">
-                        <xsl:attribute name="decimal-separator" select="$decimal-separator"/>
-                    </xsl:when>
-                    <xsl:otherwise>
-                        <xsl:attribute name="xxf:fraction-digits" select="'0'"/>
-                        <xsl:if test="number(enoxforms:get-minimum($source-context)) &gt;= 0">
-                            <xsl:attribute name="xxf:non-negative" select="'true()'"/>
-                        </xsl:if>
-                    </xsl:otherwise>
-                </xsl:choose>
-                <xsl:if test="not($suffix = '')">
-                    <xsl:attribute name="suffix" select="$suffix"/>
-                </xsl:if>
-            </xsl:if>
-            <xsl:if test="$label != '' or $question-label!= ''">
-                <xsl:variable name="conditioning-variables" as="xs:string*">
+        <xsl:variable name="body-content" as="node() *">
+            <xsl:element name="{$xforms-element}">
+                <xsl:attribute name="id" select="concat($name, '-control')"/>
+                <xsl:attribute name="name" select="$name"/>
+                <xsl:attribute name="bind" select="concat($name, '-bind')"/>
+                <xsl:if test="$appearance != ''">
                     <xsl:choose>
-                        <xsl:when test="$question-label-variables != ''">
-                            <xsl:sequence select="$question-label-variables"/>
+                        <xsl:when test="$appearance = 'drop-down-list'">
+                            <xsl:attribute name="appearance" select="'minimal'"/>
                         </xsl:when>
                         <xsl:otherwise>
-                            <xsl:sequence select="enoxforms:get-label-conditioning-variables($source-context, $languages[1])"/>
+                            <xsl:attribute name="appearance" select="'full'"/>
                         </xsl:otherwise>
                     </xsl:choose>
-                </xsl:variable>
-                <xf:label>
-                    <xsl:attribute name="ref">
-                        <xsl:call-template name="label-ref-condition">
-                            <xsl:with-param name="source-context" select="$source-context"/>
-                            <xsl:with-param name="label" select="concat('$form-resources/',$name,'/label')"/>
-                            <xsl:with-param name="conditioning-variables" select="$conditioning-variables"/>
-                            <xsl:with-param name="instance-ancestor" select="$instance-ancestor"/>
-                        </xsl:call-template>
-                    </xsl:attribute>
-                    <xsl:if test="$rich-question-label or eno:is-rich-content($label)">
-                        <xsl:attribute name="mediatype">text/html</xsl:attribute>
-                    </xsl:if>
-                </xf:label>
-            </xsl:if>
-            <xsl:if test="$hint != ''">
-                <xf:hint ref="$form-resources/{$name}/hint">
-                    <xsl:if test="eno:is-rich-content($hint)">
-                        <xsl:attribute name="mediatype">text/html</xsl:attribute>
-                    </xsl:if>
-                </xf:hint>
-            </xsl:if>
-            <xsl:if test="$help != ''">
-                <xf:help ref="$form-resources/{$name}/help">
-                    <xsl:if test="eno:is-rich-content($help)">
-                        <xsl:attribute name="mediatype">text/html</xsl:attribute>
-                    </xsl:if>
-                </xf:help>
-            </xsl:if>
-            <xsl:if test="$alert != ''">
-                <xf:alert ref="$form-resources/{$name}/alert">
-                    <xsl:if test="enoxforms:get-alert-level($source-context) != ''">
-                        <xsl:attribute name="level" select="enoxforms:get-alert-level($source-context)"/>
-                    </xsl:if>
-                    <xsl:if test="eno:is-rich-content($alert)">
-                        <xsl:attribute name="mediatype">text/html</xsl:attribute>
-                    </xsl:if>
-                </xf:alert>
-            </xsl:if>
-            <xsl:if test="self::CodeDomain or self::BooleanDomain">
-                <xsl:if test="$appearance = 'drop-down-list'">
-                    <xf:item>
-                        <xf:label/>
-                        <xf:value/>
-                    </xf:item>
                 </xsl:if>
-                <xf:itemset ref="$form-resources/{$name}/item">
+                <xsl:if test="$css-class != '' or $question-label!=''">
+                    <xsl:choose>
+                        <xsl:when test="$question-label!='' and $css-class!=''">
+                            <xsl:attribute name="class" select="concat('question ',$css-class)"/>
+                        </xsl:when>
+                        <xsl:when test="$question-label !=''">
+                            <xsl:attribute name="class" select="'question'"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:attribute name="class" select="$css-class"/>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </xsl:if>
+                <xsl:if test="not($length = '')">
+                    <xsl:attribute name="xxf:maxlength" select="$length"/>
+                </xsl:if>
+                <xsl:if test="self::NumericDomain">
+                    <xsl:attribute name="grouping-separator" select="' '"/>
+                    <xsl:choose>
+                        <xsl:when test="number(enoxforms:get-number-of-decimals($source-context)) &gt; 0">
+                            <xsl:attribute name="decimal-separator" select="$decimal-separator"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:attribute name="xxf:fraction-digits" select="'0'"/>
+                            <xsl:if test="number(enoxforms:get-minimum($source-context)) &gt;= 0">
+                                <xsl:attribute name="xxf:non-negative" select="'true()'"/>
+                            </xsl:if>
+                        </xsl:otherwise>
+                    </xsl:choose>
+                    <xsl:if test="not($suffix = '')">
+                        <xsl:attribute name="suffix" select="$suffix"/>
+                    </xsl:if>
+                </xsl:if>
+                <xsl:if test="$label != '' or $question-label!= ''">
+                    <xsl:variable name="conditioning-variables" as="xs:string*">
+                        <xsl:choose>
+                            <xsl:when test="$question-label-variables != ''">
+                                <xsl:sequence select="$question-label-variables"/>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                <xsl:sequence select="enoxforms:get-label-conditioning-variables($source-context, $languages[1])"/>
+                            </xsl:otherwise>
+                        </xsl:choose>
+                    </xsl:variable>
                     <xf:label>
                         <xsl:attribute name="ref">
                             <xsl:call-template name="label-ref-condition">
                                 <xsl:with-param name="source-context" select="$source-context"/>
-                                <xsl:with-param name="label" select="'label'"/>
-                                <xsl:with-param name="conditioning-variables" select="enoxforms:get-item-label-conditioning-variables($source-context)"/>
+                                <xsl:with-param name="label" select="concat('$form-resources/',$name,'/label')"/>
+                                <xsl:with-param name="conditioning-variables" select="$conditioning-variables"/>
                                 <xsl:with-param name="instance-ancestor" select="$instance-ancestor"/>
                             </xsl:call-template>
                         </xsl:attribute>
-                        <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-                            <xsl:with-param name="driver" select="eno:append-empty-element('Rich-Body', .)" tunnel="yes"/>
-                        </xsl:apply-templates>
+                        <xsl:if test="$rich-question-label or eno:is-rich-content($label)">
+                            <xsl:attribute name="mediatype">text/html</xsl:attribute>
+                        </xsl:if>
                     </xf:label>
-                    <xf:value ref="value"/>
-                </xf:itemset>
-            </xsl:if>
-            <!-- In this select case, if there is still something after a space in the current value, that means that 2 boxes are checked.
+                </xsl:if>
+                <xsl:if test="$hint != ''">
+                    <xf:hint ref="$form-resources/{$name}/hint">
+                        <xsl:if test="eno:is-rich-content($hint)">
+                            <xsl:attribute name="mediatype">text/html</xsl:attribute>
+                        </xsl:if>
+                    </xf:hint>
+                </xsl:if>
+                <xsl:if test="$help != ''">
+                    <xf:help ref="$form-resources/{$name}/help">
+                        <xsl:if test="eno:is-rich-content($help)">
+                            <xsl:attribute name="mediatype">text/html</xsl:attribute>
+                        </xsl:if>
+                    </xf:help>
+                </xsl:if>
+                <xsl:if test="$alert != ''">
+                    <xf:alert ref="$form-resources/{$name}/alert">
+                        <xsl:if test="enoxforms:get-alert-level($source-context) != ''">
+                            <xsl:attribute name="level" select="enoxforms:get-alert-level($source-context)"/>
+                        </xsl:if>
+                        <xsl:if test="eno:is-rich-content($alert)">
+                            <xsl:attribute name="mediatype">text/html</xsl:attribute>
+                        </xsl:if>
+                    </xf:alert>
+                </xsl:if>
+                <xsl:if test="self::CodeDomain or self::BooleanDomain">
+                    <xsl:if test="$appearance = 'drop-down-list'">
+                        <xf:item>
+                            <xf:label/>
+                            <xf:value/>
+                        </xf:item>
+                    </xsl:if>
+                    <xf:itemset ref="$form-resources/{$name}/item">
+                        <xf:label>
+                            <xsl:attribute name="ref">
+                                <xsl:call-template name="label-ref-condition">
+                                    <xsl:with-param name="source-context" select="$source-context"/>
+                                    <xsl:with-param name="label" select="'label'"/>
+                                    <xsl:with-param name="conditioning-variables" select="enoxforms:get-item-label-conditioning-variables($source-context)"/>
+                                    <xsl:with-param name="instance-ancestor" select="$instance-ancestor"/>
+                                </xsl:call-template>
+                            </xsl:attribute>
+                            <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
+                                <xsl:with-param name="driver" select="eno:append-empty-element('Rich-Body', .)" tunnel="yes"/>
+                            </xsl:apply-templates>
+                        </xf:label>
+                        <xf:value ref="value"/>
+                    </xf:itemset>
+                </xsl:if>
+                <!-- In this select case, if there is still something after a space in the current value, that means that 2 boxes are checked.
             We replace the value with what was after the space and that corresponds to the value of the last checked box.
             This unchecks the first box that was checked -->
-            <xsl:if test="self::CodeDomain and $appearance = 'checkbox'">
-                <xf:action ev:event="xforms-value-changed" if="substring-after({$instance-ancestor-label}{$name},' ') ne ''">
-                    <!-- if the collected variable is in a loop, instance-ancestor helps choosing the good collected variable -->
-                    <xf:setvalue ref="{$instance-ancestor-label}{$name}" value="substring-after({$instance-ancestor-label}{$name},' ')"/>
-                </xf:action>
-            </xsl:if>
-            <!-- For each element which relevance depends on this field, we erase the data if it became unrelevant -->
-            <xsl:for-each select="enoxforms:get-relevant-dependencies($source-context)">
-                <!-- if the filter is in a loop, instance-ancestor helps choosing the good filter -->
-                <!-- if a TableLoop is un the filter, don't empty its counter -->
-                <xf:action ev:event="xforms-value-changed"
-                    if="not(xxf:evaluate-bind-property('{.}-bind','relevant'))"
-                    iterate="{$instance-ancestor-label}{.}//*[not(descendant::*) and not(ends-with(name(),'-Count'))]">
-                    <xf:setvalue ref="." value="''"/>
-                </xf:action>
-            </xsl:for-each>
-            <!-- For each element which readonly status depends on this field, we erase the data if it became readonly -->
-            <!-- change in the point of view : we keep then now -->
-            <!--            <xsl:for-each select="enoxforms:get-readonly-dependencies($source-context)">
+                <xsl:if test="self::CodeDomain and $appearance = 'checkbox'">
+                    <xf:action ev:event="xforms-value-changed" if="substring-after({$instance-ancestor-label}{$name},' ') ne ''">
+                        <!-- if the collected variable is in a loop, instance-ancestor helps choosing the good collected variable -->
+                        <xf:setvalue ref="{$instance-ancestor-label}{$name}" value="substring-after({$instance-ancestor-label}{$name},' ')"/>
+                    </xf:action>
+                </xsl:if>
+                <!-- For each element which relevance depends on this field, we erase the data if it became unrelevant -->
+                <xsl:for-each select="enoxforms:get-relevant-dependencies($source-context)">
+                    <!-- if the filter is in a loop, instance-ancestor helps choosing the good filter -->
+                    <!-- if a TableLoop is un the filter, don't empty its counter -->
+                    <xf:action ev:event="xforms-value-changed"
+                        if="not(xxf:evaluate-bind-property('{.}-bind','relevant'))"
+                        iterate="{$instance-ancestor-label}{.}//*[not(descendant::*) and not(ends-with(name(),'-Count'))]">
+                        <xf:setvalue ref="." value="''"/>
+                    </xf:action>
+                </xsl:for-each>
+                <!-- For each element which readonly status depends on this field, we erase the data if it became readonly -->
+                <!-- change in the point of view : we keep then now -->
+                <!--            <xsl:for-each select="enoxforms:get-readonly-dependencies($source-context)">
                 <xf:action ev:event="xforms-value-changed"
                     if="{concat('xxf:evaluate-bind-property(''',.,'-bind'',''readonly'')')}"
                     iterate="{concat($instance-ancestor-label,.,'//*[not(descendant::*)]')}">
@@ -2036,25 +2196,37 @@
                 </xf:action>
             </xsl:for-each>-->
 
-            <xsl:for-each select="enoxforms:get-constraint-dependencies($source-context)">
-                <xsl:element name="xf:dispatch">
-                    <xsl:attribute name="ev:event">DOMFocusOut xforms-value-changed</xsl:attribute>
-                    <xsl:attribute name="name">DOMFocusOut</xsl:attribute>
-                    <xsl:attribute name="target" select="concat(., '-control')"/>
-                </xsl:element>
-            </xsl:for-each>
-        </xsl:element>
-        <xsl:if test="not($suffix = '') and not(self::NumericDomain)">
-            <xsl:element name="xhtml:span">
-                <xsl:attribute name="class" select="'suffix'"/>
-                <xsl:copy-of select="$suffix" copy-namespaces="no"/>
+                <xsl:for-each select="enoxforms:get-constraint-dependencies($source-context)">
+                    <xsl:element name="xf:dispatch">
+                        <xsl:attribute name="ev:event">DOMFocusOut xforms-value-changed</xsl:attribute>
+                        <xsl:attribute name="name">DOMFocusOut</xsl:attribute>
+                        <xsl:attribute name="target" select="concat(., '-control')"/>
+                    </xsl:element>
+                </xsl:for-each>
             </xsl:element>
-        </xsl:if>
-        <xsl:if test="self::CodeDomain or self::BooleanDomain">
-            <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-                <xsl:with-param name="driver" select="." tunnel="yes"/>
-            </xsl:apply-templates>
-        </xsl:if>
+            <xsl:if test="not($suffix = '') and not(self::NumericDomain)">
+                <xsl:element name="xhtml:span">
+                    <xsl:attribute name="class" select="'suffix'"/>
+                    <xsl:copy-of select="$suffix" copy-namespaces="no"/>
+                </xsl:element>
+            </xsl:if>
+            <xsl:if test="self::CodeDomain or self::BooleanDomain">
+                <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
+                    <xsl:with-param name="driver" select="." tunnel="yes"/>
+                </xsl:apply-templates>
+            </xsl:if>
+        </xsl:variable>
+
+        <xsl:choose>
+            <xsl:when test="ends-with(name(),'Domain') and (ancestor::Table or ancestor::TableLoop) and not(ancestor::Clarification)">
+                <xhtml:td align="center">
+                    <xsl:copy-of select="$body-content"/>
+                </xhtml:td>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:copy-of select="$body-content"/>
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
 
     <xd:doc>
@@ -2099,7 +2271,7 @@
         <xd:desc>Template to add mediatype html/css to rich text items</xd:desc>
     </xd:doc>
 
-    <xsl:template match="Rich-Body//xf-item" mode="model" priority="1">
+    <xsl:template match="Rich-Body//Code[ancestor::CodeDomain or ancestor::BooleanDomain]" mode="model" priority="1">
         <xsl:param name="source-context" as="item()" tunnel="yes"/>
         <xsl:param name="languages" tunnel="yes"/>
 
@@ -2232,7 +2404,7 @@
                         <xhtml:tr>
                             <xsl:apply-templates select="enoxforms:get-body-line($source-context, position())" mode="source">
                                 <xsl:with-param name="driver" select="$ancestors//*[not(child::*) and not(name() = 'driver')]" tunnel="yes"/>
-                                <!-- the absolute address of the element in enriched for TableLoop, for which several instances of RowLoop are possible -->
+                                <!-- the absolute address of the element in enriched for TableLoop, for which several instances of Row are possible -->
                                 <xsl:with-param name="instance-ancestor" select="if ($instance-ancestor='') then $loop-name else concat($instance-ancestor,' ',$loop-name)" tunnel="yes"/>
                             </xsl:apply-templates>
                         </xhtml:tr>
@@ -2264,62 +2436,91 @@
 
     <xd:doc>
         <xd:desc>
-            <xd:p>Template for Body for the TextCell driver.</xd:p>
+            <xd:p>Template for Body for the headers of lines and columns in tables.</xd:p>
         </xd:desc>
     </xd:doc>
-    <xsl:template match="Body//TextCell" mode="model">
+    <xsl:template match="Body//CodeDimension | Body//Code[not(ancestor::CodeDomain or ancestor::BooleanDomain)]" mode="model">
         <xsl:param name="source-context" as="item()" tunnel="yes"/>
         <xsl:param name="languages" tunnel="yes"/>
+        <xsl:param name="instance-ancestor" tunnel="yes"/>
+
         <xsl:variable name="depth" select="enoxforms:get-code-depth($source-context)"/>
+        <xsl:variable name="name" select="enoxforms:get-cell-name($source-context)"/>
+        <xsl:variable name="label" select="enoxforms:get-label($source-context,$languages)"/>
+        <xsl:variable name="conditioning-variables" select="enoxforms:get-label-conditioning-variables($source-context, $languages[1])" as="xs:string*"/>
 
         <xhtml:th colspan="{enoxforms:get-colspan($source-context)}" rowspan="{enoxforms:get-rowspan($source-context)}">
             <xsl:if test="$depth != '1' and $depth != ''">
                 <xsl:attribute name="class" select="concat('depth',$depth)"/>
             </xsl:if>
-            <!-- A new virtual tree is created as driver -->
-            <xsl:variable name="new-driver">
-                <Body>
-                    <xf-output/>
-                </Body>
-            </xsl:variable>
-            <!-- This new driver is applied on the same source-context -->
-            <xsl:apply-templates select="$new-driver//xf-output" mode="model"/>
+            <xf:output id="{$name}-control" name="{$name}" bind="{$name}-bind">
+                <xsl:if test="$label != ''">
+                    <xf:label>
+                        <xsl:attribute name="ref">
+                            <xsl:call-template name="label-ref-condition">
+                                <xsl:with-param name="source-context" select="$source-context"/>
+                                <xsl:with-param name="label" select="concat('$form-resources/',$name,'/label')"/>
+                                <xsl:with-param name="conditioning-variables" select="$conditioning-variables"/>
+                                <xsl:with-param name="instance-ancestor" select="$instance-ancestor"/>
+                            </xsl:call-template>
+                        </xsl:attribute>
+                        <xsl:if test="eno:is-rich-content($label)">
+                            <xsl:attribute name="mediatype">text/html</xsl:attribute>
+                        </xsl:if>
+                    </xf:label>
+                </xsl:if>
+            </xf:output>
         </xhtml:th>
     </xsl:template>
 
     <xd:doc>
         <xd:desc>
-            <xd:p>Template for Body for the Cell driver.</xd:p>
+            <xd:p>Template for Body for the headers of lines and columns in tables : special case of CodeList : they may have several Label and correspond to several cells.</xd:p>
         </xd:desc>
     </xd:doc>
-    <xsl:template match="Body//Cell" mode="model">
+    <xsl:template match="Body//CodeList[not(ancestor::CodeDomain)]" mode="model">
         <xsl:param name="source-context" as="item()" tunnel="yes"/>
         <xsl:param name="languages" tunnel="yes"/>
-        <xhtml:td align="center">
-            <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-                <xsl:with-param name="driver" select="." tunnel="yes"/>
-            </xsl:apply-templates>
-        </xhtml:td>
+        <xsl:param name="instance-ancestor" tunnel="yes"/>
+
+        <xsl:variable name="colspan" select="enoxforms:get-colspan($source-context)"/>
+        <xsl:variable name="rowspan" select="enoxforms:get-rowspan($source-context)"/>
+        <xsl:variable name="codelist-name" select="enoxforms:get-cell-name($source-context)"/>
+        <xsl:variable name="conditioning-variables" select="enoxforms:get-label-conditioning-variables($source-context, $languages[1])" as="xs:string*"/>
+        <xsl:variable name="show-label" select="enoxforms:is-codelist-label-shown($source-context)" as="xs:boolean"/>
+
+        <xsl:if test="$codelist-name != ''">
+            <xsl:for-each select="enoxforms:get-label($source-context,$languages)">
+                <xsl:variable name="name" select="concat($codelist-name,'-',position())"/>
+                <xhtml:th colspan="{$colspan}" rowspan="{$rowspan}">
+                    <xf:output id="{$name}-control" name="{$name}" bind="{$name}-bind">
+                        <xsl:if test=". != '' and $show-label">
+                            <xf:label>
+                                <xsl:attribute name="ref">
+                                    <xsl:call-template name="label-ref-condition">
+                                        <xsl:with-param name="source-context" select="$source-context"/>
+                                        <xsl:with-param name="label" select="concat('$form-resources/',$name,'/label')"/>
+                                        <xsl:with-param name="conditioning-variables" select="$conditioning-variables"/>
+                                        <xsl:with-param name="instance-ancestor" select="$instance-ancestor"/>
+                                    </xsl:call-template>
+                                </xsl:attribute>
+                                <xsl:if test="eno:is-rich-content(.)">
+                                    <xsl:attribute name="mediatype">text/html</xsl:attribute>
+                                </xsl:if>
+                            </xf:label>
+                        </xsl:if>
+                    </xf:output>
+                </xhtml:th>
+            </xsl:for-each>            
+        </xsl:if>
     </xsl:template>
 
-    <xd:doc>
+
+<!--    <xd:doc>
         <xd:desc>No other - give details out of cells</xd:desc>
     </xd:doc>
     <xsl:template match="Body//Clarification[(ancestor::Table or ancestor::TableLoop) and not(ancestor::Cell)]" mode="model" priority="2"/>
-
-    <xd:doc>
-        <xd:desc>
-            <xd:p>The Cell driver produces something only in the Body part but its children can produce something.</xd:p>
-        </xd:desc>
-    </xd:doc>
-    <xsl:template match="*[name() = ('Instance', 'Bind', 'Resource')]//*[name() = ('Cell')]" mode="model">
-        <xsl:param name="source-context" as="item()" tunnel="yes"/>
-        <xsl:param name="language" tunnel="yes"/>
-        <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-            <xsl:with-param name="driver" select="." tunnel="yes"/>
-        </xsl:apply-templates>
-    </xsl:template>
-
+-->
     <xd:doc>
         <xd:desc>
             <xd:p>Template for Body for the FixedCell driver.</xd:p>
@@ -2330,7 +2531,7 @@
         <xsl:param name="languages" tunnel="yes"/>
         <xsl:param name="instance-ancestor" tunnel="yes"/>
 
-        <xsl:variable name="name" select="enoxforms:get-name($source-context)"/>
+        <xsl:variable name="name" select="enoxforms:get-cell-name($source-context)"/>
         <xsl:variable name="label" select="enoxforms:get-label($source-context, $languages)"/>
         <xsl:variable name="css-class" select="enoxforms:get-css-class($source-context)"/>
         <xsl:variable name="conditioning-variables" as="xs:string*">
@@ -2405,7 +2606,7 @@
                 <xsl:with-param name="instance-ancestor" select="if ($instance-ancestor='') then $business-name else concat($instance-ancestor,' ',$business-name)" tunnel="yes"/>
             </xsl:apply-templates>
         </xf:repeat>
-        
+
         <xsl:if test="enoxforms:get-linked-containers($source-context)[1] = enoxforms:get-container-name($source-context)">
             <xf:trigger id="{$loop-name}-add-occurrence" bind="{$loop-name}-add-occurrence-bind">
                 <xf:label ref="$form-resources/{$loop-name}-AddOccurrence/label"/>
@@ -2488,88 +2689,89 @@
             </xsl:choose>
         </xsl:variable>
 
-        <xsl:for-each select="$ordered-layout-list//format">
-            <xsl:element name="{$input-format}">
-                <xsl:attribute name="id" select="concat(@variable, '-control')"/>
-                <xsl:attribute name="name" select="@variable"/>
-                <xsl:attribute name="bind" select="concat(@variable, '-bind')"/>
-                <xsl:if test="$input-format='xf:select1'">
-                    <xsl:attribute name="appearance" select="'minimal'"/>
-                </xsl:if>
-                <xsl:if test="$input-format='fr:number'">
-                    <xsl:attribute name="xxf:fraction-digits" select="'0'"/>
-                    <xsl:attribute name="xxf:non-negative" select="'true()'"/>
-                </xsl:if>
-                <xsl:attribute name="class">
-                    <xsl:choose>
-                        <xsl:when test="$question-label !='' and $current-driver='DurationDomain'">
-                            <xsl:value-of select="'question duration'"/>
-                        </xsl:when>
-                        <xsl:when test="$current-driver='DurationDomain'">
-                            <xsl:value-of select="'duration'"/>
-                        </xsl:when>
-                        <xsl:when test="$question-label !=''">
-                            <xsl:value-of select="'question date'"/>
-                        </xsl:when>
-                        <xsl:otherwise>
-                            <xsl:value-of select="'date'"/>
-                        </xsl:otherwise>
-                    </xsl:choose>
-                </xsl:attribute>
-                <xsl:if test="$current-driver = 'DurationDomain'">
-                    <xsl:attribute name="xxf:maxlength" select="if (string-length(@minimum) &gt; string-length(@maximum)) then string-length(@minimum) else string-length(@maximum)"/>
-                    <xsl:attribute name="suffix" select="$labels-resource/Languages/Language[@xml:lang=$languages[1]]/Duration/*[name()=current()/@unit]/text()"/>
-                </xsl:if>
-                <xsl:if test="position() = 1 and ($label != '' or $question-label!= '')">
-                    <xsl:variable name="conditioning-variables" as="xs:string*">
+        <xsl:variable name="body-content" as="node() *">
+            <xsl:for-each select="$ordered-layout-list//format">
+                <xsl:element name="{$input-format}">
+                    <xsl:attribute name="id" select="concat(@variable, '-control')"/>
+                    <xsl:attribute name="name" select="@variable"/>
+                    <xsl:attribute name="bind" select="concat(@variable, '-bind')"/>
+                    <xsl:if test="$input-format='xf:select1'">
+                        <xsl:attribute name="appearance" select="'minimal'"/>
+                    </xsl:if>
+                    <xsl:if test="$input-format='fr:number'">
+                        <xsl:attribute name="xxf:fraction-digits" select="'0'"/>
+                        <xsl:attribute name="xxf:non-negative" select="'true()'"/>
+                    </xsl:if>
+                    <xsl:attribute name="class">
                         <xsl:choose>
-                            <xsl:when test="$question-label-variables != ''">
-                                <xsl:sequence select="$question-label-variables"/>
+                            <xsl:when test="$question-label !='' and $current-driver='DurationDomain'">
+                                <xsl:value-of select="'question duration'"/>
+                            </xsl:when>
+                            <xsl:when test="$current-driver='DurationDomain'">
+                                <xsl:value-of select="'duration'"/>
+                            </xsl:when>
+                            <xsl:when test="$question-label !=''">
+                                <xsl:value-of select="'question date'"/>
                             </xsl:when>
                             <xsl:otherwise>
-                                <xsl:sequence select="enoxforms:get-label-conditioning-variables($source-context, $languages[1])"/>
+                                <xsl:value-of select="'date'"/>
                             </xsl:otherwise>
                         </xsl:choose>
-                    </xsl:variable>
-                    <xf:label>
-                        <xsl:attribute name="ref">
-                            <xsl:call-template name="label-ref-condition">
-                                <xsl:with-param name="source-context" select="$source-context"/>
-                                <xsl:with-param name="label" select="concat('$form-resources/',@variable,'/label')"/>
-                                <xsl:with-param name="conditioning-variables" select="$conditioning-variables"/>
-                                <xsl:with-param name="instance-ancestor" select="$instance-ancestor"/>
-                            </xsl:call-template>
-                        </xsl:attribute>
-                        <xsl:if test="$rich-question-label or eno:is-rich-content($label)">
-                            <xsl:attribute name="mediatype">text/html</xsl:attribute>
-                        </xsl:if>
-                    </xf:label>
-                </xsl:if>
-                <xsl:if test="($dateduration-format = 'YYYY-MM-DD' or upper-case($dateduration-format) = 'JJ/MM/AAAA' or (($dateduration-format='YYYY-MM' or upper-case($dateduration-format)='MM/AAAA') and position() = last()))
-                           and $question-label !=''">
-                    <xf:hint ref="$form-resources/{@variable}/hint"/>
-                </xsl:if>
-                <xsl:if test="$current-driver = 'DurationDomain' or $dateduration-format = 'YYYY-MM-DD' or upper-case($dateduration-format) = 'JJ/MM/AAAA' or (($dateduration-format='YYYY-MM' or upper-case($dateduration-format)='MM/AAAA') and @id='Y')">
-                    <xf:alert ref="$form-resources/{@variable}/alert">
-                        <xsl:if test="enoxforms:get-alert-level($source-context) != ''">
-                            <xsl:attribute name="level" select="enoxforms:get-alert-level($source-context)"/>
-                        </xsl:if>
-                        <xsl:if test="eno:is-rich-content(enoxforms:get-alert($source-context, $languages[1]))">
-                            <xsl:attribute name="mediatype">text/html</xsl:attribute>
-                        </xsl:if>
-                    </xf:alert>
-                </xsl:if>
-                <xsl:for-each select="enoxforms:get-relevant-dependencies($source-context)">
-                    <!-- if the filter is in a loop, instance-ancestor helps choosing the good filter -->
-                    <xf:action ev:event="xforms-value-changed"
-                        if="not(xxf:evaluate-bind-property('{.}-bind','relevant'))"
-                        iterate="{$instance-ancestor-label}{.}//*[not(descendant::*) and not(ends-with(name(),'-Count'))]">
-                        <xf:setvalue ref="." value="''"/>
-                    </xf:action>
-                </xsl:for-each>
-                <!-- For each element which readonly status depends on this field, we erase the data if it became readonly -->
-                <!-- change in the point of view : we keep then now -->
-                <!--            <xsl:for-each select="enoxforms:get-readonly-dependencies($source-context)">
+                    </xsl:attribute>
+                    <xsl:if test="$current-driver = 'DurationDomain'">
+                        <xsl:attribute name="xxf:maxlength" select="if (string-length(@minimum) &gt; string-length(@maximum)) then string-length(@minimum) else string-length(@maximum)"/>
+                        <xsl:attribute name="suffix" select="$labels-resource/Languages/Language[@xml:lang=$languages[1]]/Duration/*[name()=current()/@unit]/text()"/>
+                    </xsl:if>
+                    <xsl:if test="position() = 1 and ($label != '' or $question-label!= '')">
+                        <xsl:variable name="conditioning-variables" as="xs:string*">
+                            <xsl:choose>
+                                <xsl:when test="$question-label-variables != ''">
+                                    <xsl:sequence select="$question-label-variables"/>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <xsl:sequence select="enoxforms:get-label-conditioning-variables($source-context, $languages[1])"/>
+                                </xsl:otherwise>
+                            </xsl:choose>
+                        </xsl:variable>
+                        <xf:label>
+                            <xsl:attribute name="ref">
+                                <xsl:call-template name="label-ref-condition">
+                                    <xsl:with-param name="source-context" select="$source-context"/>
+                                    <xsl:with-param name="label" select="concat('$form-resources/',@variable,'/label')"/>
+                                    <xsl:with-param name="conditioning-variables" select="$conditioning-variables"/>
+                                    <xsl:with-param name="instance-ancestor" select="$instance-ancestor"/>
+                                </xsl:call-template>
+                            </xsl:attribute>
+                            <xsl:if test="$rich-question-label or eno:is-rich-content($label)">
+                                <xsl:attribute name="mediatype">text/html</xsl:attribute>
+                            </xsl:if>
+                        </xf:label>
+                    </xsl:if>
+                    <xsl:if test="($dateduration-format = 'YYYY-MM-DD' or upper-case($dateduration-format) = 'JJ/MM/AAAA' or (($dateduration-format='YYYY-MM' or upper-case($dateduration-format)='MM/AAAA') and position() = last()))
+                        and $question-label !=''">
+                        <xf:hint ref="$form-resources/{@variable}/hint"/>
+                    </xsl:if>
+                    <xsl:if test="$current-driver = 'DurationDomain' or $dateduration-format = 'YYYY-MM-DD' or upper-case($dateduration-format) = 'JJ/MM/AAAA' or (($dateduration-format='YYYY-MM' or upper-case($dateduration-format)='MM/AAAA') and @id='Y')">
+                        <xf:alert ref="$form-resources/{@variable}/alert">
+                            <xsl:if test="enoxforms:get-alert-level($source-context) != ''">
+                                <xsl:attribute name="level" select="enoxforms:get-alert-level($source-context)"/>
+                            </xsl:if>
+                            <xsl:if test="eno:is-rich-content(enoxforms:get-alert($source-context, $languages[1]))">
+                                <xsl:attribute name="mediatype">text/html</xsl:attribute>
+                            </xsl:if>
+                        </xf:alert>
+                    </xsl:if>
+                    <xsl:for-each select="enoxforms:get-relevant-dependencies($source-context)">
+                        <!-- if the filter is in a loop, instance-ancestor helps choosing the good filter -->
+                        <xf:action ev:event="xforms-value-changed"
+                            if="not(xxf:evaluate-bind-property('{.}-bind','relevant'))"
+                            iterate="{$instance-ancestor-label}{.}//*[not(descendant::*) and not(ends-with(name(),'-Count'))]">
+                            <xf:setvalue ref="." value="''"/>
+                        </xf:action>
+                    </xsl:for-each>
+                    <!-- For each element which readonly status depends on this field, we erase the data if it became readonly -->
+                    <!-- change in the point of view : we keep then now -->
+                    <!--            <xsl:for-each select="enoxforms:get-readonly-dependencies($source-context)">
                 <xf:action ev:event="xforms-value-changed"
                     if="{concat('xxf:evaluate-bind-property(''',.,'-bind'',''readonly'')')}"
                     iterate="{concat($instance-ancestor-label,.,'//*[not(descendant::*)]')}">
@@ -2577,30 +2779,42 @@
                 </xf:action>
             </xsl:for-each>-->
 
-                <xsl:for-each select="enoxforms:get-constraint-dependencies($source-context)">
-                    <xsl:element name="xf:dispatch">
-                        <xsl:attribute name="ev:event">DOMFocusOut xforms-value-changed</xsl:attribute>
-                        <xsl:attribute name="name">DOMFocusOut</xsl:attribute>
-                        <xsl:attribute name="target" select="concat(., '-control')"/>
-                    </xsl:element>
-                </xsl:for-each>
-                <xsl:if test="$input-format = 'xf:select1'">
-                    <xf:item>
-                        <xf:label/>
-                        <xf:value/>
-                    </xf:item>
-                    <xf:itemset ref="$form-resources/{@variable}/item">
-                        <xf:label ref="label"/>
-                        <xf:value ref="value"/>
-                    </xf:itemset>
-                </xsl:if>
-            </xsl:element>
-        </xsl:for-each>
-        <xsl:if test="$current-driver = 'DurationDomain' or count($layout-list//format) &gt; 1">
-            <xf:output id="{$name}-dateduration-constraint-control" name="{$name}-dateduration-constraint" bind="{$name}-dateduration-constraint-bind">
-                <xf:alert ref="$form-resources/{$name}-dateduration-constraint/alert" level="error"/>
-            </xf:output>
-        </xsl:if>
+                    <xsl:for-each select="enoxforms:get-constraint-dependencies($source-context)">
+                        <xsl:element name="xf:dispatch">
+                            <xsl:attribute name="ev:event">DOMFocusOut xforms-value-changed</xsl:attribute>
+                            <xsl:attribute name="name">DOMFocusOut</xsl:attribute>
+                            <xsl:attribute name="target" select="concat(., '-control')"/>
+                        </xsl:element>
+                    </xsl:for-each>
+                    <xsl:if test="$input-format = 'xf:select1'">
+                        <xf:item>
+                            <xf:label/>
+                            <xf:value/>
+                        </xf:item>
+                        <xf:itemset ref="$form-resources/{@variable}/item">
+                            <xf:label ref="label"/>
+                            <xf:value ref="value"/>
+                        </xf:itemset>
+                    </xsl:if>
+                </xsl:element>
+            </xsl:for-each>
+            <xsl:if test="$current-driver = 'DurationDomain' or count($layout-list//format) &gt; 1">
+                <xf:output id="{$name}-dateduration-constraint-control" name="{$name}-dateduration-constraint" bind="{$name}-dateduration-constraint-bind">
+                    <xf:alert ref="$form-resources/{$name}-dateduration-constraint/alert" level="error"/>
+                </xf:output>
+            </xsl:if>
+        </xsl:variable>
+
+        <xsl:choose>
+            <xsl:when test="ancestor::Clarification or not(ancestor::Table or ancestor::TableLoop)">
+                <xsl:copy-of select="$body-content"/>
+            </xsl:when>
+            <xsl:otherwise>
+                <xhtml:td align="center">
+                    <xsl:copy-of select="$body-content"/>
+                </xhtml:td>
+            </xsl:otherwise>
+        </xsl:choose>
     </xsl:template>
 
     <xd:doc>
@@ -3157,14 +3371,14 @@
                                         <xsl:choose>
                                             <xsl:when test="regex-group(2) = ('sum','mean','count')">
                                                 <!-- equal to 0, when all empty for sum, mean and count -->
-                                                <xsl:value-of select="', 0)'"/>        
+                                                <xsl:value-of select="', 0)'"/>
                                             </xsl:when>
                                             <xsl:otherwise>
                                                 <!-- equal to blank, when all empty for min and max -->
                                                 <xsl:value-of select="')'"/>
                                             </xsl:otherwise>
                                         </xsl:choose>
-                                        
+
                                         <xsl:call-template name="replaceVariablesInFormula">
                                             <xsl:with-param name="formula" select="regex-group(4)"/>
                                             <xsl:with-param name="variables" as="node()" select="$variables"/>

@@ -231,11 +231,11 @@
         <!-- Counting the labels located at the top of the referenced list (if they exist, they should not be taken into account)-->
         <xsl:variable name="label-or-no" select="count(d:GridDimension[@rank='2']/d:CodeDomain/r:CodeListReference/l:CodeList/r:Label)"/>
 
-        <!-- If it is the first line -->
+        <!-- If it is the first line : top-left cells -->
         <xsl:if test="$index=1">
             <xsl:choose>
-                <xsl:when test="d:GridDimension[@rank='1']//l:CodeList/r:Label">
-                    <xsl:sequence select="d:GridDimension[@rank='1']//l:CodeList/r:Label"/>
+                <xsl:when test="d:GridDimension[@rank='1']//l:CodeList[r:Label]">
+                    <xsl:sequence select="d:GridDimension[@rank='1']//l:CodeList[r:Label]"/>
                 </xsl:when>
                 <xsl:otherwise>
                     <xsl:sequence select="d:GridDimension[@rank='1']"/>
@@ -246,8 +246,7 @@
         1) codes which nesting level in codes lists with labels is equal to index+1
         2) labels from l:CodeList-->
 
-        <xsl:sequence select="d:GridDimension[@rank='2']//(l:Code[count(ancestor::l:CodeList[r:Label])+count(ancestor::l:Code)=$index+number($label-or-no)-1]
-                                                         | l:CodeList/r:Label[count(ancestor::l:CodeList[r:Label])+count(ancestor::l:Code)=$index+number($label-or-no)])"/>
+        <xsl:sequence select="d:GridDimension[@rank='2']//(l:Code| l:CodeList[r:Label])[count(ancestor::l:CodeList[r:Label])+count(ancestor::l:Code)=$index+number($label-or-no)-1]"/>
     </xsl:template>
 
     <xd:doc>
@@ -326,37 +325,22 @@
 
     <xd:doc>
         <xd:desc>For the column headers (that are also part of the line.
-            Those are the r:Label that are directly on top of the referenced codes list.
+            Those are the labels that are directly on top of the referenced codes list.
             We need to get the depth level from the 2nd dimension.
             So, we select all the l:Code that have no child (and therefore have the highest depth-level),
             for each one we get this depth-level
             and we keep the maximum, which will be the depth of the 2nd dimension.
         </xd:desc>
     </xd:doc>
-    <xsl:template
-        match="r:Label[parent::l:CodeList/parent::r:CodeListReference/parent::d:CodeDomain/parent::d:GridDimension[@rank='1']]"
-        mode="enoddi:get-rowspan" priority="1">
+    <xsl:template match="l:CodeList[r:Label and parent::r:CodeListReference/parent::d:CodeDomain/parent::d:GridDimension[@rank='1']]" mode="enoddi:get-rowspan" priority="1">
 
-        <xsl:variable name="label-or-no">
-            <xsl:value-of
-                select="count(ancestor::d:GridDimension[@rank='1']/following-sibling::d:GridDimension[@rank='2']/d:CodeDomain/r:CodeListReference/l:CodeList/r:Label)"
-            />
-        </xsl:variable>
-        <xsl:value-of
-            select="max(ancestor::d:GridDimension[@rank='1']/following-sibling::d:GridDimension[@rank='2']//l:Code[not(l:Code)]/(count(ancestor::l:CodeList[r:Label])+ count(ancestor-or-self::l:Code)))-number($label-or-no)"
-        />
+        <xsl:value-of select="max(ancestor::d:GridDimension[@rank='1']/following-sibling::d:GridDimension[@rank='2']//l:Code[not(l:Code)]/(count(ancestor::l:CodeList/r:Label)+ count(ancestor-or-self::l:Code)))
+                          - count(ancestor::d:GridDimension[@rank='1']/following-sibling::d:GridDimension[@rank='2']/d:CodeDomain/r:CodeListReference/l:CodeList/r:Label)"/>
     </xsl:template>
 
-    <xsl:template
-        match="r:Label[parent::l:CodeList/parent::r:CodeListReference/parent::d:CodeDomain/parent::d:GridDimension[@rank='1' and ../d:GridDimension[@rank='2']]]"
-        mode="enoddi:get-colspan" priority="1">
-        <xsl:variable name="label-or-no">
-            <xsl:value-of
-                select="count(../r:Label)-1"
-            />
-        </xsl:variable>
+    <xsl:template match="l:CodeList[r:Label and parent::r:CodeListReference/parent::d:CodeDomain/parent::d:GridDimension[@rank='1' and ../d:GridDimension[@rank='2']]]" mode="enoddi:get-colspan" priority="1">
 
-        <xsl:value-of select="max(parent::l:CodeList//l:Code[not(l:Code)]/count(ancestor::l:Code))+1-$label-or-no"/>
+        <xsl:value-of select="max(descendant::l:Code[not(l:Code)]/count(ancestor::l:Code))+1-(count(r:Label)-1)"/>
     </xsl:template>
 
     <xd:doc>
@@ -399,8 +383,8 @@
             <xd:p>Getting colspan for the line labels (2nd dimension). It depends on the depth level.</xd:p>
         </xd:desc>
     </xd:doc>
-    <xsl:template match="r:Label[ancestor::d:GridDimension[@rank='2']]" mode="enoddi:get-colspan" priority="1">
-        <xsl:value-of select="count(parent::l:CodeList//l:Code[not(descendant::l:Code)])"/>
+    <xsl:template match="l:CodeList[ancestor::d:GridDimension[@rank='2']]" mode="enoddi:get-colspan" priority="1">
+        <xsl:value-of select="count(descendant::l:Code[not(descendant::l:Code)])"/>
     </xsl:template>
     <xsl:template match="l:Code[ancestor::d:GridDimension[@rank='2'] and descendant::l:Code]" mode="enoddi:get-colspan" priority="1">
         <xsl:value-of select="count(descendant::l:Code[not(descendant::l:Code)])"/>
@@ -421,7 +405,7 @@
             -count(parent::l:CodeList/ancestor::l:CodeList[r:Label])
             -count(ancestor::l:Code)"/>
     </xsl:template>-->
-    <xsl:template match="d:GridDimension[@rank='1' and ../d:GridDimension/@rank='2' and d:CodeDomain and not(descendant::l:CodeList/r:Label)]" mode="enoddi:get-rowspan" priority="1">
+    <xsl:template match="d:GridDimension[@rank='1' and ../d:GridDimension/@rank='2' and d:CodeDomain and not(descendant::l:CodeList[r:Label])]" mode="enoddi:get-rowspan" priority="1">
         <xsl:value-of select="max(../d:GridDimension[@rank='2']//l:Code[not(l:Code)]/(count(ancestor::l:CodeList[r:Label])+count(ancestor::l:Code)))+1
             -(if (../d:GridDimension[@rank='2']//l:CodeList[1]/r:Label) then 1 else 0)"/>
     </xsl:template>
@@ -1441,15 +1425,6 @@
     </xd:doc>
     <xsl:template match="d:Loop | d:QuestionGrid[d:GridDimension/d:Roster]" mode="enoddi:get-external-variables">
         <xsl:sequence select="//l:VariableScheme//l:VariableGroup[r:BasedOnObject/r:BasedOnReference[1]/r:ID=current()/r:ID]
-            /r:VariableReference/l:Variable[not(r:QuestionReference or r:SourceParameterReference or descendant::r:ProcessingInstructionReference)]"/>
-    </xsl:template>
-    <xd:doc>
-        <xd:desc>
-            <xd:p>The list of the external variables linked to a dynamic array</xd:p>
-        </xd:desc>
-    </xd:doc>
-    <xsl:template match="d:StructuredMixedGridResponseDomain[parent::d:QuestionGrid[d:GridDimension/d:Roster]]" mode="enoddi:get-external-variables">
-        <xsl:sequence select="//l:VariableScheme//l:VariableGroup[r:BasedOnObject/r:BasedOnReference[1]/r:ID=current()/parent::d:QuestionGrid/r:ID]
             /r:VariableReference/l:Variable[not(r:QuestionReference or r:SourceParameterReference or descendant::r:ProcessingInstructionReference)]"/>
     </xsl:template>
 

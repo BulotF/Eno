@@ -1,0 +1,192 @@
+<InformationsCollecte>
+    <ServiceProducteur>
+        <Identifiant>DARES</Identifiant>
+        <Article>la </Article>
+        <Libelle>DARES</Libelle>
+        <MinistereTutelle>du Travail</MinistereTutelle>
+        <MinistereTutelle>de l'Économie et des Finances</MinistereTutelle>
+        <Logo>
+            <Identifiant>2</Identifiant>
+        </Logo>
+        <ChefSignataire>
+            <Fonction>Le sous-directeur de la DARES</Fonction>
+            <Nom>Malik Koubi</Nom>
+        </ChefSignataire>
+    </ServiceProducteur>
+    <ServiceCollecteur>
+        <Identifiant>DARES</Identifiant>
+        <Nom>DARES-ACEMOTRIM</Nom>
+        <AdresseMessagerie>dares.acemo-p1@travail.gouv.fr</AdresseMessagerie>
+        <Telephone>0100000000</Telephone>
+        <Adresse>
+            <NumeroVoie>39-43</NumeroVoie>
+            <TypeVoie>Quai</TypeVoie>
+            <LibelleVoie>ANDRE CITROEN</LibelleVoie>
+            <CodeCedex>75902</CodeCedex>
+            <LibelleCedex>PARIS CEDEX 15</LibelleCedex>
+            <ComplementAdresse>DEPT SCS - POLE ACEMO</ComplementAdresse>
+        </Adresse>
+        <ChefSignataire>
+            <Fonction>Le sous-directeur de la DARES</Fonction>
+            <Nom>Malik Koubi</Nom>
+        </ChefSignataire>
+    </ServiceCollecteur>
+    <Source><Identifiant>ACEMOTRIM</Identifiant><LibelleLong>Activité et conditions d'emploi de la
+            main-d'œuvre</LibelleLong><LibelleCourt>ACEMOTRIM</LibelleCourt><NiveauDeSecurite>moyen</NiveauDeSecurite><Frequence><Libelle>trimestrielle</Libelle></Frequence>
+                -<Reference><TypeObjetReference>ServiceCollecteur</TypeObjetReference><IdReference>DARES</IdReference></Reference><Reference><TypeObjetReference>ServiceProducteur</TypeObjetReference><IdReference>DARES</IdReference></Reference></Source>
+    <Enquete identifiantOperation="ACEMOTRIM2019">
+        <AnneeCollecte>2019</AnneeCollecte>
+        <AnneeReference>2018</AnneeReference>
+        <LibelleLong>Activité et conditions d'emploi de la main-d'œuvre (trimestrielle)
+            2019</LibelleLong>
+        <LibelleCourt>ACEMOTRIM 2019</LibelleCourt>
+        <NomOperation>ACEMOTRIM</NomOperation>
+        <TailleEchantillon>36000</TailleEchantillon>
+        <ObjectifsCourts>L'enquête fournit des indicateurs conjoncturels sur l'emploi salarié, la
+            durée de travail, et l'évolution des salaires de base</ObjectifsCourts>
+        <ObjectifsLongs>L'enquête trimestrielle sur l'activité et les conditions d'emploi de la main
+            d'œuvre (Acemo) sert à mesurer l'évolution des salaires de base, utile au suivi de la
+            conjoncture salariale et à l'indexation du smic. Elle vise également à mesurer
+            l'évolution de la durée hebdomadaire du travail et ses fluctuations à court terme ainsi
+            que l'existence ou non de difficultés de recrutement et le nombre d'emplois
+            vacants.</ObjectifsLongs>
+        <StatutEnquete>intérêt général et de qualité statistique</StatutEnquete>
+        <CaractereObligatoire>oui</CaractereObligatoire>
+        <NumeroVisa>2019T021TV</NumeroVisa>
+        <URLCnis>http://www.cnis.fr</URLCnis>
+        <URLDiffusion>http://travail-emploi.gouv.fr</URLDiffusion>
+        <!--<URLNotice>http://travail-emploi.gouv.fr/IMG/pdf/Notice_Enquete_trimestrielle_Acemo-2.pdf</URLNotice>
+-->
+        <URLNotice>http://dares.travail-emploi.gouv.fr/dares-etudes-et-statistiques/enquetes-de-a-a-z/article/activite-et-conditions-d-emploi-de-la-main-d-oeuvre-acemo-enquete-trimestrielle</URLNotice>
+        <!--<URLSpecimen>http://dares.travail-emploi.gouv.fr/IMG/pdf/Questionnaire_Acemo_trimestriel-2.pdf</URLSpecimen>
+-->
+        <URLSpecimen>http://dares.travail-emploi.gouv.fr/dares-etudes-et-statistiques/enquetes-de-a-a-z/article/activite-et-conditions-d-emploi-de-la-main-d-oeuvre-acemo-enquete-trimestrielle</URLSpecimen>
+    </Enquete>
+    <Campagne idCampagne="ACEMOTRIM2019T01">
+        <!-- A voir si ce champ est nécessaire et si oui comment est-il initialisé. Pour l'instant rien de le fichier d'init, ni le DDI ne fourni cette info (renseignée à la main ?) 
+-->
+        <Libelle>Activité et conditions d'emploi de la main-d'œuvre 4ème trimestre 2018</Libelle>
+        <!-- Référence vers l'objet DDI "Enquête" contenant les métadonnées (titre de l'enquête, etc.). Peut-être faut-il type d'avantage la référence pour être en mesure de la comprendre (g:ResourcePackage pas parlant par rapport à Enquete) 
+-->
+        <Reference>
+            <TypeObjetReference>Enquete</TypeObjetReference>
+            <IdReference>ACEMOTRIM2019</IdReference>
+        </Reference>
+        <AnneeReference>2018</AnneeReference>
+        <PeriodeReference>4ème trimestre</PeriodeReference>
+        <Vague idVague="01">
+            <Calendrier dateRetourSouhaitee="20190118">
+                <DateCollecte>
+                    <Date>20181231</Date>
+                    <EtapeCollecte>Ouverture</EtapeCollecte>
+                    <Reference>
+                        <TypeObjetReference>ModèleCourrier</TypeObjetReference>
+                        <IdReference>Modele1</IdReference>
+                    </Reference>
+                    <Reference>
+                        <TypeObjetReference>ModèleCourrier</TypeObjetReference>
+                        <IdReference>Modele1</IdReference>
+                    </Reference>
+                </DateCollecte>
+                <DateCollecte>
+                    <Date>20190124</Date>
+                    <EtapeCollecte>Relance</EtapeCollecte>
+                    <Reference>
+                        <TypeObjetReference>ModèleCourrier</TypeObjetReference>
+                        <IdReference>Modele1</IdReference>
+                    </Reference>
+                    <Reference>
+                        <TypeObjetReference>ModèleCourrier</TypeObjetReference>
+                        <IdReference>Modele2</IdReference>
+                    </Reference>
+                </DateCollecte>
+                <DateCollecte>
+                    <Date>20190214</Date>
+                    <EtapeCollecte>MiseEnDemeure</EtapeCollecte>
+                    <Reference>
+                        <TypeObjetReference>ModèleCourrier</TypeObjetReference>
+                        <IdReference>Modele1</IdReference>
+                    </Reference>
+                </DateCollecte>
+                <DateCollecte>
+                    <Date>20190309</Date>
+                    <EtapeCollecte>ConstatNonReponse</EtapeCollecte>
+                    <Reference>
+                        <TypeObjetReference>ModèleCourrier</TypeObjetReference>
+                        <IdReference>Modele1</IdReference>
+                    </Reference>
+                </DateCollecte>
+                <DateCollecte>
+                    <Date>20190625</Date>
+                    <EtapeCollecte>Fermeture</EtapeCollecte>
+                    <Reference>
+                        <TypeObjetReference>ModèleCourrier</TypeObjetReference>
+                        <IdReference>Modele1</IdReference>
+                    </Reference>
+                    <Reference>
+                        <TypeObjetReference>ModèleCourrier</TypeObjetReference>
+                        <IdReference>Modele1</IdReference>
+                    </Reference>
+                </DateCollecte>
+            </Calendrier>
+            <Chargement>"20181114104014"</Chargement>
+        </Vague>
+        <Vague idVague="99">
+            <Calendrier dateRetourSouhaitee="20190118">
+                <DateCollecte>
+                    <Date>20181101</Date>
+                    <EtapeCollecte>Ouverture</EtapeCollecte>
+                    <Reference>
+                        <TypeObjetReference>ModèleCourrier</TypeObjetReference>
+                        <IdReference>Modele1</IdReference>
+                    </Reference>
+                    <Reference>
+                        <TypeObjetReference>ModèleCourrier</TypeObjetReference>
+                        <IdReference>Modele1</IdReference>
+                    </Reference>
+                </DateCollecte>
+                <DateCollecte>
+                    <Date>20190124</Date>
+                    <EtapeCollecte>Relance</EtapeCollecte>
+                    <Reference>
+                        <TypeObjetReference>ModèleCourrier</TypeObjetReference>
+                        <IdReference>Modele1</IdReference>
+                    </Reference>
+                    <Reference>
+                        <TypeObjetReference>ModèleCourrier</TypeObjetReference>
+                        <IdReference>Modele2</IdReference>
+                    </Reference>
+                </DateCollecte>
+                <DateCollecte>
+                    <Date>20190214</Date>
+                    <EtapeCollecte>MiseEnDemeure</EtapeCollecte>
+                    <Reference>
+                        <TypeObjetReference>ModèleCourrier</TypeObjetReference>
+                        <IdReference>Modele1</IdReference>
+                    </Reference>
+                </DateCollecte>
+                <DateCollecte>
+                    <Date>20190309</Date>
+                    <EtapeCollecte>ConstatNonReponse</EtapeCollecte>
+                    <Reference>
+                        <TypeObjetReference>ModèleCourrier</TypeObjetReference>
+                        <IdReference>Modele1</IdReference>
+                    </Reference>
+                </DateCollecte>
+                <DateCollecte>
+                    <Date>20190625</Date>
+                    <EtapeCollecte>Fermeture</EtapeCollecte>
+                    <Reference>
+                        <TypeObjetReference>ModèleCourrier</TypeObjetReference>
+                        <IdReference>Modele1</IdReference>
+                    </Reference>
+                    <Reference>
+                        <TypeObjetReference>ModèleCourrier</TypeObjetReference>
+                        <IdReference>Modele1</IdReference>
+                    </Reference>
+                </DateCollecte>
+            </Calendrier>
+            <Chargement>"20181114104014"</Chargement>
+        </Vague>
+    </Campagne>
+</InformationsCollecte>

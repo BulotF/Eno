@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ENOParameters>
+    <Parameters>
+        <Context>business</Context>
+        <Languages>
+            <Language>fr</Language>
+        </Languages>
+        <BeginQuestion>
+            <Identification>true</Identification>
+        </BeginQuestion>
+        
+        <EndQuestion>
+            <ResponseTimeQuestion>true</ResponseTimeQuestion>
+            <CommentQuestion>true</CommentQuestion>
+        </EndQuestion>
+        
+        <xforms-parameters>            
+            <NumericExample>false</NumericExample>
+            <Deblocage>false</Deblocage>
+            <Satisfaction>false</Satisfaction>
+            <DecimalSeparator>.</DecimalSeparator>
+        </xforms-parameters>
+        <Title>
+            <Sequence>
+                <Level name="template"/>
+                <Level name="module">
+                    <PreSeq/>
+                    <NumParent>N</NumParent>
+                    <PostNumParentSeq/>
+                    <StyleNumSeq>I</StyleNumSeq>
+                    <PostNumSeq> - </PostNumSeq>
+                </Level>
+                <Level name="submodule">
+                    <PreSeq/>
+                    <NumParent>N</NumParent>
+                    <PostNumParentSeq/>
+                    <StyleNumSeq>1</StyleNumSeq>
+                    <PostNumSeq>. </PostNumSeq>
+                </Level>
+                <Level name="group">
+                    <PreSeq/>
+                    <NumParent>N</NumParent>
+                    <PostNumParentSeq/>
+                    <StyleNumSeq>a</StyleNumSeq>
+                    <PostNumSeq>. </PostNumSeq>
+                </Level>
+                <NumberFreeSeq>DARES-ACEMO-SEQ-0</NumberFreeSeq>
+            </Sequence>
+            <Question>
+                <Level name="module">
+                    <PreQuest>➡ </PreQuest>
+                    <NumParent>N</NumParent>
+                    <PostNumParentQuest/>
+                    <StyleNumQuest>1</StyleNumQuest>
+                    <PostNumQuest>. </PostNumQuest>
+                </Level>
+                <Level name="submodule">
+                    <PreQuest>➡ </PreQuest>
+                    <NumParent>O</NumParent>
+                    <PostNumParentQuest>-</PostNumParentQuest>
+                    <StyleNumQuest>a</StyleNumQuest>
+                    <PostNumQuest>. </PostNumQuest>
+                </Level>
+                <Level name="group">
+                    <PreQuest/>
+                    <NumParent>O</NumParent>
+                    <PostNumParentQuest/>
+                    <StyleNumQuest>1</StyleNumQuest>
+                    <PostNumQuest>. </PostNumQuest>
+                </Level>
+            </Question>
+        </Title>
+        <Css>acemo/acemo.css</Css>
+        <Css>acemo/acemotrim/acemotrim.css</Css>
+    </Parameters>
+</ENOParameters>
