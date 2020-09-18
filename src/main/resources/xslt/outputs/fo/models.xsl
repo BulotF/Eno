@@ -520,7 +520,7 @@
 						<xsl:value-of select="concat('#set( $',$loop-name,'.LoopPosition = $velocityCount)')"/>
 						<xsl:text>&#xd;</xsl:text>
 						<xsl:if test="$context != 'default'">
-							<xsl:value-of select="replace($table-split-content,'PositionInTheLoop',concat('\$',$loop-name,'.LoopPosition'))" disable-output-escaping="yes"/>							
+							<xsl:value-of select="replace($table-split-content,'PositionInTheLoop',concat('\$',$loop-name,'.LoopPosition'))" disable-output-escaping="yes"/>
 						</xsl:if>
 						<!-- the line to loop on -->
 						<xsl:for-each select="enofo:get-body-lines($source-context)">
@@ -641,11 +641,6 @@
 		</fo:table-cell>
 	</xsl:template>
 
-	<xd:doc>
-		<xd:desc>No other - give details out of cells</xd:desc>
-	</xd:doc>
-	<xsl:template match="xf-group[(ancestor::Table or ancestor::TableLoop) and not(ancestor::Cell)]" mode="model" priority="2"/>
-
 	<xsl:template match="main//EmptyCell" mode="model">
 		<xsl:param name="source-context" as="item()" tunnel="yes"/>
 		<xsl:param name="languages" tunnel="yes"/>
@@ -678,6 +673,7 @@
 	</xd:doc>
 	<xsl:template match="main//VariableGroup" mode="model"/>
 	<xsl:template match="main//Variable" mode="model"/>
+	<xsl:template match="main//RosterDimension" mode="model"/>
 
 	<xsl:template match="main//TextareaDomain" mode="model">
 		<xsl:param name="source-context" as="item()" tunnel="yes"/>
@@ -693,25 +689,44 @@
 			</xsl:call-template>
 		</xsl:variable>
 
-		<fo:block-container height="{$height}mm">
-			<xsl:if test="not($isTable = 'YES')">
-				<xsl:attribute name="border-color" select="'black'"/>
-				<xsl:attribute name="border-style" select="'solid'"/>
-			</xsl:if>
-			<fo:block>
-				<xsl:choose>
-					<xsl:when test="enofo:is-initializable-variable($source-context)">
-						<xsl:value-of select="concat('#{if}(',$variable-name,')',$variable-name,'#{else}&#160;#{end}')"/>
-					</xsl:when>
-					<xsl:otherwise>
-						<xsl:value-of select="'&#160;'"/>
-					</xsl:otherwise>
-				</xsl:choose>
-			</fo:block>
-		</fo:block-container>
-		<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-			<xsl:with-param name="driver" select="." tunnel="yes"/>
-		</xsl:apply-templates>
+		<xsl:variable name="response-content" as="node()*">
+			<fo:block-container height="{$height}mm">
+				<xsl:if test="not($isTable = 'YES')">
+					<xsl:attribute name="border-color" select="'black'"/>
+					<xsl:attribute name="border-style" select="'solid'"/>
+				</xsl:if>
+				<fo:block>
+					<xsl:choose>
+						<xsl:when test="enofo:is-initializable-variable($source-context)">
+							<xsl:value-of select="concat('#{if}(',$variable-name,')',$variable-name,'#{else}&#160;#{end}')"/>
+						</xsl:when>
+						<xsl:otherwise>
+							<xsl:value-of select="'&#160;'"/>
+						</xsl:otherwise>
+					</xsl:choose>
+				</fo:block>
+			</fo:block-container>
+			<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
+				<xsl:with-param name="driver" select="." tunnel="yes"/>
+			</xsl:apply-templates>
+		</xsl:variable>
+		<xsl:choose>
+			<xsl:when test="$isTable = 'YES' and not(ancestor::Clarification)">
+				<fo:table-cell xsl:use-attribute-sets="data-cell">
+					<xsl:if test="$no-border = 'no-border'">
+						<xsl:attribute name="border">0mm</xsl:attribute>
+						<xsl:attribute name="padding-top">0mm</xsl:attribute>
+						<xsl:attribute name="padding-bottom">0mm</xsl:attribute>
+					</xsl:if>
+					<fo:block>
+						<xsl:copy-of select="$response-content"/>
+					</fo:block>
+				</fo:table-cell>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:copy-of select="$response-content"/>
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
 
 	<xsl:template match="main//TextDomain" mode="model">
@@ -732,104 +747,114 @@
 		</xsl:variable>
 		<xsl:variable name="variable-personalization-begin" select="concat('#{if}(',$variable-name,')',$variable-name,'#{else}')"/>
 
-		<xsl:if test="$label != ''">
-			<xsl:choose>
-				<xsl:when test="$other-give-details">
-					<fo:block xsl:use-attribute-sets="details" page-break-inside="avoid" keep-with-next="always" keep-together.within-column="always">
-						<fo:inline>
-							<xsl:call-template name="insert-image">
-								<xsl:with-param name="image-name" select="'arrow_details.png'"/>
-							</xsl:call-template>
+		<xsl:variable name="response-content" as="node()*">
+			<xsl:if test="$label != ''">
+				<xsl:choose>
+					<xsl:when test="$other-give-details">
+						<fo:block xsl:use-attribute-sets="details" page-break-inside="avoid" keep-with-next="always" keep-together.within-column="always">
+							<fo:inline>
+								<xsl:call-template name="insert-image">
+									<xsl:with-param name="image-name" select="'arrow_details.png'"/>
+								</xsl:call-template>
+								<xsl:copy-of select="$label"/>
+							</fo:inline>
+						</fo:block>
+					</xsl:when>
+					<xsl:otherwise>
+						<fo:block xsl:use-attribute-sets="label-question" page-break-inside="avoid" keep-with-next="always" keep-together.within-column="always">
 							<xsl:copy-of select="$label"/>
-						</fo:inline>
-					</fo:block>
-				</xsl:when>
-				<xsl:otherwise>
-					<fo:block xsl:use-attribute-sets="label-question" page-break-inside="avoid" keep-with-next="always" keep-together.within-column="always">
-						<xsl:copy-of select="$label"/>
-					</fo:block>
-				</xsl:otherwise>
-			</xsl:choose>
-		</xsl:if>
-		<fo:block>
-			<xsl:choose>
-				<xsl:when test="(enofo:get-format($source-context) or ($length !='' and number($length) &lt;= 20)) and ancestor::Cell">
-					<fo:block xsl:use-attribute-sets="label-cell">
-						<xsl:if test="enofo:is-initializable-variable($source-context)">
-							<xsl:value-of select="$variable-personalization-begin"/>
-						</xsl:if>
-						<xsl:for-each select="1 to xs:integer(number($length))">
-							<xsl:call-template name="insert-image">
-								<xsl:with-param name="image-name" select="'mask_number.png'"/>
-							</xsl:call-template>
-						</xsl:for-each>
-						<xsl:if test="enofo:is-initializable-variable($source-context)">
-							<xsl:value-of select="'#{end}'"/>
-						</xsl:if>
-					</fo:block>
-				</xsl:when>
-				<xsl:when test="enofo:get-format($source-context) or ($length !='' and number($length) &lt;= 20)">
-					<fo:block xsl:use-attribute-sets="general-style">
-						<xsl:if test="enofo:is-initializable-variable($source-context)">
-							<xsl:value-of select="$variable-personalization-begin"/>
-						</xsl:if>
-						<xsl:for-each select="1 to xs:integer(number($length))">
-							<xsl:call-template name="insert-image">
-								<xsl:with-param name="image-name" select="'mask_number.png'"/>
-							</xsl:call-template>
-						</xsl:for-each>
-						<xsl:if test="enofo:is-initializable-variable($source-context)">
-							<xsl:value-of select="'#{end}'"/>
-						</xsl:if>
-					</fo:block>
-				</xsl:when>
-				<xsl:when test="$no-border = 'no-border'">
-					<fo:block-container height="8mm" width="50mm">
-						<fo:block border-color="black" border-style="solid" width="50mm">
-							<xsl:choose>
-								<xsl:when test="enofo:is-initializable-variable($source-context)">
-									<xsl:value-of select="concat('#{if}(',$variable-name,')',$variable-name,'#{else}&#160;#{end}')"/>
-								</xsl:when>
-								<xsl:otherwise>
-									<xsl:value-of select="'&#160;'"/>
-								</xsl:otherwise>
-							</xsl:choose>
 						</fo:block>
-					</fo:block-container>
-				</xsl:when>
-				<xsl:when test="$isTable = 'YES'">
-					<fo:block-container height="8mm" width="50mm">
-						<fo:block>
-							<xsl:choose>
-								<xsl:when test="enofo:is-initializable-variable($source-context)">
-									<xsl:value-of select="concat('#{if}(',$variable-name,')',$variable-name,'#{else}&#160;#{end}')"/>
-								</xsl:when>
-								<xsl:otherwise>
-									<xsl:value-of select="'&#160;'"/>
-								</xsl:otherwise>
-							</xsl:choose>
+					</xsl:otherwise>
+				</xsl:choose>
+			</xsl:if>
+			<fo:block>
+				<xsl:choose>
+					<xsl:when test="(enofo:get-format($source-context) or ($length !='' and number($length) &lt;= 20)) and $isTable = 'YES'">
+						<fo:block xsl:use-attribute-sets="label-cell">
+							<xsl:if test="enofo:is-initializable-variable($source-context)">
+								<xsl:value-of select="$variable-personalization-begin"/>
+							</xsl:if>
+							<xsl:for-each select="1 to xs:integer(number($length))">
+								<xsl:call-template name="insert-image">
+									<xsl:with-param name="image-name" select="'mask_number.png'"/>
+								</xsl:call-template>
+							</xsl:for-each>
+							<xsl:if test="enofo:is-initializable-variable($source-context)">
+								<xsl:value-of select="'#{end}'"/>
+							</xsl:if>
 						</fo:block>
-					</fo:block-container>
-				</xsl:when>
-				<xsl:otherwise>
-					<fo:block-container height="8mm" border-color="black" border-style="solid" width="100%">
-						<fo:block>
-							<xsl:choose>
-								<xsl:when test="enofo:is-initializable-variable($source-context)">
-									<xsl:value-of select="concat('#{if}(',$variable-name,')',$variable-name,'#{else}&#160;#{end}')"/>
-								</xsl:when>
-								<xsl:otherwise>
-									<xsl:value-of select="'&#160;'"/>
-								</xsl:otherwise>
-							</xsl:choose>
+					</xsl:when>
+					<xsl:when test="enofo:get-format($source-context) or ($length !='' and number($length) &lt;= 20)">
+						<fo:block xsl:use-attribute-sets="general-style">
+							<xsl:if test="enofo:is-initializable-variable($source-context)">
+								<xsl:value-of select="$variable-personalization-begin"/>
+							</xsl:if>
+							<xsl:for-each select="1 to xs:integer(number($length))">
+								<xsl:call-template name="insert-image">
+									<xsl:with-param name="image-name" select="'mask_number.png'"/>
+								</xsl:call-template>
+							</xsl:for-each>
+							<xsl:if test="enofo:is-initializable-variable($source-context)">
+								<xsl:value-of select="'#{end}'"/>
+							</xsl:if>
 						</fo:block>
-					</fo:block-container>
-				</xsl:otherwise>
-			</xsl:choose>
-		</fo:block>
-		<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-			<xsl:with-param name="driver" select="." tunnel="yes"/>
-		</xsl:apply-templates>
+					</xsl:when>
+					<xsl:when test="$isTable = 'YES'">
+						<fo:block-container height="8mm" width="50mm">
+							<fo:block>
+								<xsl:if test="$no-border = 'no-border'">
+									<xsl:attribute name="border-color" select="'black'"/>
+									<xsl:attribute name="border-style" select="'solid'"/>
+									<xsl:attribute name="width" select="'50mm'"/>
+								</xsl:if>
+								<xsl:choose>
+									<xsl:when test="enofo:is-initializable-variable($source-context)">
+										<xsl:value-of select="concat('#{if}(',$variable-name,')',$variable-name,'#{else}&#160;#{end}')"/>
+									</xsl:when>
+									<xsl:otherwise>
+										<xsl:value-of select="'&#160;'"/>
+									</xsl:otherwise>
+								</xsl:choose>
+							</fo:block>
+						</fo:block-container>
+					</xsl:when>
+					<xsl:otherwise>
+						<fo:block-container height="8mm" border-color="black" border-style="solid" width="100%">
+							<fo:block>
+								<xsl:choose>
+									<xsl:when test="enofo:is-initializable-variable($source-context)">
+										<xsl:value-of select="concat('#{if}(',$variable-name,')',$variable-name,'#{else}&#160;#{end}')"/>
+									</xsl:when>
+									<xsl:otherwise>
+										<xsl:value-of select="'&#160;'"/>
+									</xsl:otherwise>
+								</xsl:choose>
+							</fo:block>
+						</fo:block-container>
+					</xsl:otherwise>
+				</xsl:choose>
+			</fo:block>
+			<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
+				<xsl:with-param name="driver" select="." tunnel="yes"/>
+			</xsl:apply-templates>			
+		</xsl:variable>
+		<xsl:choose>
+			<xsl:when test="$isTable = 'YES' and not(ancestor::Clarification)">
+				<fo:table-cell xsl:use-attribute-sets="data-cell">
+					<xsl:if test="$no-border = 'no-border'">
+						<xsl:attribute name="border">0mm</xsl:attribute>
+						<xsl:attribute name="padding-top">0mm</xsl:attribute>
+						<xsl:attribute name="padding-bottom">0mm</xsl:attribute>
+					</xsl:if>
+					<fo:block>
+						<xsl:copy-of select="$response-content"/>
+					</fo:block>
+				</fo:table-cell>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:copy-of select="$response-content"/>
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
 
 	<xsl:template match="main//NumericDomain" mode="model">
@@ -851,150 +876,169 @@
 		</xsl:variable>
 		<xsl:variable name="variable-personalization-begin" select="concat('#{if}(',$variable-name,')',$variable-name,'#{else}')"/>
 
-		<xsl:if test="$label != ''">
-			<xsl:choose>
-				<xsl:when test="$other-give-details">
-					<fo:block xsl:use-attribute-sets="details" page-break-inside="avoid" keep-with-next="always" keep-together.within-column="always">
-						<fo:inline>
-							<xsl:call-template name="insert-image">
-								<xsl:with-param name="image-name" select="'arrow_details.png'"/>
-							</xsl:call-template>
+		<xsl:variable name="response-content" as="node()*">
+			<xsl:if test="$label != ''">
+				<xsl:choose>
+					<xsl:when test="$other-give-details">
+						<fo:block xsl:use-attribute-sets="details" page-break-inside="avoid" keep-with-next="always" keep-together.within-column="always">
+							<fo:inline>
+								<xsl:call-template name="insert-image">
+									<xsl:with-param name="image-name" select="'arrow_details.png'"/>
+								</xsl:call-template>
+								<xsl:copy-of select="$label"/>
+							</fo:inline>
+						</fo:block>
+					</xsl:when>
+					<xsl:otherwise>
+						<fo:block xsl:use-attribute-sets="label-question" page-break-inside="avoid" keep-with-next="always" keep-together.within-column="always">
 							<xsl:copy-of select="$label"/>
-						</fo:inline>
-					</fo:block>
-				</xsl:when>
-				<xsl:otherwise>
-					<fo:block xsl:use-attribute-sets="label-question" page-break-inside="avoid" keep-with-next="always" keep-together.within-column="always">
-						<xsl:copy-of select="$label"/>
-					</fo:block>
-				</xsl:otherwise>
-			</xsl:choose>
-		</xsl:if>
-		<fo:block>
-			<xsl:if test="$isTable = 'YES'">
-				<xsl:attribute name="text-align">right</xsl:attribute>
-				<xsl:attribute name="padding-top">0mm</xsl:attribute>
-				<xsl:attribute name="padding-bottom">0mm</xsl:attribute>
+						</fo:block>
+					</xsl:otherwise>
+				</xsl:choose>
 			</xsl:if>
-			<xsl:choose>
-				<xsl:when test="$numeric-capture = 'optical'">
-					<xsl:variable name="separator-position">
-						<xsl:choose>
-							<xsl:when test="enofo:get-number-of-decimals($source-context) != '0'">
-								<xsl:value-of select="string($length - number(enofo:get-number-of-decimals($source-context)))"/>
-							</xsl:when>
-							<xsl:otherwise>
-								<xsl:value-of select="'0'"/>
-							</xsl:otherwise>
-						</xsl:choose>
-					</xsl:variable>
-					<xsl:variable name="optical-content" as="node() *">
-						<xsl:for-each select="1 to xs:integer($length)">
+			<fo:block>
+				<xsl:if test="$isTable = 'YES'">
+					<xsl:attribute name="text-align">right</xsl:attribute>
+					<xsl:attribute name="padding-top">0mm</xsl:attribute>
+					<xsl:attribute name="padding-bottom">0mm</xsl:attribute>
+				</xsl:if>
+				<xsl:choose>
+					<xsl:when test="$numeric-capture = 'optical'">
+						<xsl:variable name="separator-position">
 							<xsl:choose>
-								<xsl:when test="$separator-position = .">
-									<fo:inline> , </fo:inline>
+								<xsl:when test="enofo:get-number-of-decimals($source-context) != '0'">
+									<xsl:value-of select="string($length - number(enofo:get-number-of-decimals($source-context)))"/>
 								</xsl:when>
 								<xsl:otherwise>
-									<xsl:call-template name="insert-image">
-										<xsl:with-param name="image-name" select="'mask_number.png'"/>
-									</xsl:call-template>
+									<xsl:value-of select="'0'"/>
 								</xsl:otherwise>
 							</xsl:choose>
-						</xsl:for-each>
-					</xsl:variable>
-					<xsl:choose>
-						<xsl:when test="ancestor::Cell">
-							<fo:block xsl:use-attribute-sets="label-cell" padding-bottom="0mm" padding-top="0mm">
+						</xsl:variable>
+						<xsl:variable name="optical-content" as="node() *">
+							<xsl:for-each select="1 to xs:integer($length)">
 								<xsl:choose>
-									<xsl:when test="enofo:is-initializable-variable($source-context)">
-										<xsl:value-of select="$variable-personalization-begin"/>
-										<xsl:copy-of select="$optical-content"/>
-										<xsl:value-of select="'#{end}'"/>
+									<xsl:when test="$separator-position = .">
+										<fo:inline> , </fo:inline>
 									</xsl:when>
 									<xsl:otherwise>
-										<xsl:copy-of select="$optical-content"/>
+										<xsl:call-template name="insert-image">
+											<xsl:with-param name="image-name" select="'mask_number.png'"/>
+										</xsl:call-template>
 									</xsl:otherwise>
 								</xsl:choose>
-								<fo:inline><xsl:value-of select="enofo:get-suffix($source-context, $languages[1])"/></fo:inline>
-							</fo:block>
-						</xsl:when>
-						<xsl:otherwise>
-							<fo:block xsl:use-attribute-sets="general-style" padding-bottom="0mm" padding-top="0mm">
-								<xsl:choose>
-									<xsl:when test="enofo:is-initializable-variable($source-context)">
-										<xsl:value-of select="$variable-personalization-begin"/>
-										<xsl:copy-of select="$optical-content"/>
-										<xsl:value-of select="'#{end}'"/>
-									</xsl:when>
-									<xsl:otherwise>
-										<xsl:copy-of select="$optical-content"/>
-									</xsl:otherwise>
-								</xsl:choose>
-								<fo:inline><xsl:value-of select="enofo:get-suffix($source-context, $languages[1])"/></fo:inline>
-							</fo:block>
-						</xsl:otherwise>
-					</xsl:choose>
-				</xsl:when>
-				<xsl:otherwise>
-					<xsl:variable name="width-coefficient" as="xs:integer">
+							</xsl:for-each>
+						</xsl:variable>
 						<xsl:choose>
-							<xsl:when test="not($isTable = 'YES') or ($no-border = 'no-border')">
-								<xsl:value-of select="4"/>
+							<xsl:when test="ancestor::Cell">
+								<fo:block xsl:use-attribute-sets="label-cell" padding-bottom="0mm" padding-top="0mm">
+									<xsl:choose>
+										<xsl:when test="enofo:is-initializable-variable($source-context)">
+											<xsl:value-of select="$variable-personalization-begin"/>
+											<xsl:copy-of select="$optical-content"/>
+											<xsl:value-of select="'#{end}'"/>
+										</xsl:when>
+										<xsl:otherwise>
+											<xsl:copy-of select="$optical-content"/>
+										</xsl:otherwise>
+									</xsl:choose>
+									<fo:inline><xsl:value-of select="enofo:get-suffix($source-context, $languages[1])"/></fo:inline>
+								</fo:block>
 							</xsl:when>
 							<xsl:otherwise>
-								<xsl:value-of select="3"/>
+								<fo:block xsl:use-attribute-sets="general-style" padding-bottom="0mm" padding-top="0mm">
+									<xsl:choose>
+										<xsl:when test="enofo:is-initializable-variable($source-context)">
+											<xsl:value-of select="$variable-personalization-begin"/>
+											<xsl:copy-of select="$optical-content"/>
+											<xsl:value-of select="'#{end}'"/>
+										</xsl:when>
+										<xsl:otherwise>
+											<xsl:copy-of select="$optical-content"/>
+										</xsl:otherwise>
+									</xsl:choose>
+									<fo:inline><xsl:value-of select="enofo:get-suffix($source-context, $languages[1])"/></fo:inline>
+								</fo:block>
 							</xsl:otherwise>
 						</xsl:choose>
-					</xsl:variable>
-					<xsl:variable name="manual-content" as="node()">
-						<fo:inline-container>
-							<xsl:attribute name="width" select="concat(string($length*$width-coefficient),'mm')"/>
-							<fo:block-container height="8mm">
+					</xsl:when>
+					<xsl:otherwise>
+						<xsl:variable name="width-coefficient" as="xs:integer">
+							<xsl:choose>
+								<xsl:when test="not($isTable = 'YES') or ($no-border = 'no-border')">
+									<xsl:value-of select="4"/>
+								</xsl:when>
+								<xsl:otherwise>
+									<xsl:value-of select="3"/>
+								</xsl:otherwise>
+							</xsl:choose>
+						</xsl:variable>
+						<xsl:variable name="manual-content" as="node()">
+							<fo:inline-container>
 								<xsl:attribute name="width" select="concat(string($length*$width-coefficient),'mm')"/>
-								<xsl:if test="not($isTable = 'YES') or ($no-border = 'no-border')">
-									<xsl:attribute name="border-color" select="'black'"/>
-									<xsl:attribute name="border-style" select="'solid'"/>
-								</xsl:if>
-								<fo:block>
-									&#160;
+								<fo:block-container height="8mm">
+									<xsl:attribute name="width" select="concat(string($length*$width-coefficient),'mm')"/>
+									<xsl:if test="not($isTable = 'YES') or ($no-border = 'no-border')">
+										<xsl:attribute name="border-color" select="'black'"/>
+										<xsl:attribute name="border-style" select="'solid'"/>
+									</xsl:if>
+									<fo:block>
+										&#160;
+									</fo:block>
+								</fo:block-container>
+							</fo:inline-container>
+						</xsl:variable>
+						<xsl:choose>
+							<xsl:when test="ancestor::Cell">
+								<fo:block xsl:use-attribute-sets="label-cell" padding-bottom="0mm" padding-top="0mm">
+									<xsl:choose>
+										<xsl:when test="enofo:is-initializable-variable($source-context)">
+											<xsl:copy-of select="concat($variable-personalization-begin,$manual-content,'#{end}')"/>
+										</xsl:when>
+										<xsl:otherwise>
+											<xsl:copy-of select="$manual-content"/>
+										</xsl:otherwise>
+									</xsl:choose>
+									<fo:inline><xsl:value-of select="enofo:get-suffix($source-context, $languages[1])"/></fo:inline>
 								</fo:block>
-							</fo:block-container>
-						</fo:inline-container>
-					</xsl:variable>
-					<xsl:choose>
-						<xsl:when test="ancestor::Cell">
-							<fo:block xsl:use-attribute-sets="label-cell" padding-bottom="0mm" padding-top="0mm">
-								<xsl:choose>
-									<xsl:when test="enofo:is-initializable-variable($source-context)">
-										<xsl:copy-of select="concat($variable-personalization-begin,$manual-content,'#{end}')"/>
-									</xsl:when>
-									<xsl:otherwise>
-										<xsl:copy-of select="$manual-content"/>
-									</xsl:otherwise>
-								</xsl:choose>
-								<fo:inline><xsl:value-of select="enofo:get-suffix($source-context, $languages[1])"/></fo:inline>
-							</fo:block>
-						</xsl:when>
-						<xsl:otherwise>
-							<fo:block xsl:use-attribute-sets="general-style" padding-bottom="0mm" padding-top="0mm">
-								<xsl:choose>
-									<xsl:when test="enofo:is-initializable-variable($source-context)">
-										<xsl:copy-of select="concat($variable-personalization-begin,$manual-content,'#{end}')"/>
-									</xsl:when>
-									<xsl:otherwise>
-										<xsl:copy-of select="$manual-content"/>
-									</xsl:otherwise>
-								</xsl:choose>
-								<fo:inline><xsl:value-of select="enofo:get-suffix($source-context, $languages[1])"/></fo:inline>
-							</fo:block>
-						</xsl:otherwise>
-					</xsl:choose>
-				</xsl:otherwise>
-			</xsl:choose>
-		</fo:block>
-		<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-			<xsl:with-param name="driver" select="." tunnel="yes"/>
-		</xsl:apply-templates>
+							</xsl:when>
+							<xsl:otherwise>
+								<fo:block xsl:use-attribute-sets="general-style" padding-bottom="0mm" padding-top="0mm">
+									<xsl:choose>
+										<xsl:when test="enofo:is-initializable-variable($source-context)">
+											<xsl:copy-of select="concat($variable-personalization-begin,$manual-content,'#{end}')"/>
+										</xsl:when>
+										<xsl:otherwise>
+											<xsl:copy-of select="$manual-content"/>
+										</xsl:otherwise>
+									</xsl:choose>
+									<fo:inline><xsl:value-of select="enofo:get-suffix($source-context, $languages[1])"/></fo:inline>
+								</fo:block>
+							</xsl:otherwise>
+						</xsl:choose>
+					</xsl:otherwise>
+				</xsl:choose>
+			</fo:block>
+			<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
+				<xsl:with-param name="driver" select="." tunnel="yes"/>
+			</xsl:apply-templates>			
+		</xsl:variable>
+		<xsl:choose>
+			<xsl:when test="$isTable = 'YES' and not(ancestor::Clarification)">
+				<fo:table-cell xsl:use-attribute-sets="data-cell">
+					<xsl:if test="$no-border = 'no-border'">
+						<xsl:attribute name="border">0mm</xsl:attribute>
+						<xsl:attribute name="padding-top">0mm</xsl:attribute>
+						<xsl:attribute name="padding-bottom">0mm</xsl:attribute>
+					</xsl:if>
+					<fo:block>
+						<xsl:copy-of select="$response-content"/>
+					</fo:block>
+				</fo:table-cell>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:copy-of select="$response-content"/>
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
 
 	<xsl:template match="main//DateTimeDomain" mode="model">
@@ -1028,59 +1072,78 @@
 		</xsl:variable>
 		<xsl:variable name="variable-personalization-begin" select="concat('#{if}(',$variable-name,')',$variable-name,'#{else}')"/>
 
-		<xsl:if test="$label != ''">
-			<xsl:choose>
-				<xsl:when test="$other-give-details">
-					<fo:block xsl:use-attribute-sets="details" page-break-inside="avoid" keep-with-next="always" keep-together.within-column="always">
-						<fo:inline>
-							<xsl:call-template name="insert-image">
-								<xsl:with-param name="image-name" select="'arrow_details.png'"/>
-							</xsl:call-template>
+		<xsl:variable name="response-content" as="node()*">
+			<xsl:if test="$label != ''">
+				<xsl:choose>
+					<xsl:when test="$other-give-details">
+						<fo:block xsl:use-attribute-sets="details" page-break-inside="avoid" keep-with-next="always" keep-together.within-column="always">
+							<fo:inline>
+								<xsl:call-template name="insert-image">
+									<xsl:with-param name="image-name" select="'arrow_details.png'"/>
+								</xsl:call-template>
+								<xsl:copy-of select="$label"/>
+							</fo:inline>
+						</fo:block>
+					</xsl:when>
+					<xsl:otherwise>
+						<fo:block xsl:use-attribute-sets="label-question" page-break-inside="avoid" keep-with-next="always" keep-together.within-column="always">
 							<xsl:copy-of select="$label"/>
-						</fo:inline>
+						</fo:block>
+					</xsl:otherwise>
+				</xsl:choose>
+			</xsl:if>
+			<xsl:choose>
+				<xsl:when test="$isTable = 'YES'">
+					<fo:block xsl:use-attribute-sets="label-cell">
+						<xsl:attribute name="text-align">right</xsl:attribute>
+						<xsl:attribute name="padding-top">0mm</xsl:attribute>
+						<xsl:attribute name="padding-bottom">0mm</xsl:attribute>
+						<xsl:if test="enofo:is-initializable-variable($source-context)">
+							<xsl:value-of select="$variable-personalization-begin"/>
+						</xsl:if>
+						<xsl:call-template name="insert-image">
+							<xsl:with-param name="image-name" select="concat('date-',$numeric-capture-character,'-',$languages[1],'-',$field-image-name,'.png')"/>
+						</xsl:call-template>
+						<xsl:if test="enofo:is-initializable-variable($source-context)">
+							<xsl:value-of select="'#{end}'"/>
+						</xsl:if>
 					</fo:block>
 				</xsl:when>
 				<xsl:otherwise>
-					<fo:block xsl:use-attribute-sets="label-question" page-break-inside="avoid" keep-with-next="always" keep-together.within-column="always">
-						<xsl:copy-of select="$label"/>
+					<fo:block xsl:use-attribute-sets="general-style">
+						<xsl:if test="enofo:is-initializable-variable($source-context)">
+							<xsl:value-of select="$variable-personalization-begin"/>
+						</xsl:if>
+						<xsl:call-template name="insert-image">
+							<xsl:with-param name="image-name" select="concat('date-',$numeric-capture-character,'-',$languages[1],'-',$field-image-name,'.png')"/>
+						</xsl:call-template>
+						<xsl:if test="enofo:is-initializable-variable($source-context)">
+							<xsl:value-of select="'#{end}'"/>
+						</xsl:if>
 					</fo:block>
 				</xsl:otherwise>
 			</xsl:choose>
-		</xsl:if>
+			<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
+				<xsl:with-param name="driver" select="." tunnel="yes"/>
+			</xsl:apply-templates>			
+		</xsl:variable>
 		<xsl:choose>
-			<xsl:when test="$isTable = 'YES'">
-				<fo:block xsl:use-attribute-sets="label-cell">
-					<xsl:attribute name="text-align">right</xsl:attribute>
-					<xsl:attribute name="padding-top">0mm</xsl:attribute>
-					<xsl:attribute name="padding-bottom">0mm</xsl:attribute>
-					<xsl:if test="enofo:is-initializable-variable($source-context)">
-						<xsl:value-of select="$variable-personalization-begin"/>
+			<xsl:when test="$isTable = 'YES' and not(ancestor::Clarification)">
+				<fo:table-cell xsl:use-attribute-sets="data-cell">
+					<xsl:if test="$no-border = 'no-border'">
+						<xsl:attribute name="border">0mm</xsl:attribute>
+						<xsl:attribute name="padding-top">0mm</xsl:attribute>
+						<xsl:attribute name="padding-bottom">0mm</xsl:attribute>
 					</xsl:if>
-					<xsl:call-template name="insert-image">
-						<xsl:with-param name="image-name" select="concat('date-',$numeric-capture-character,'-',$languages[1],'-',$field-image-name,'.png')"/>
-					</xsl:call-template>
-					<xsl:if test="enofo:is-initializable-variable($source-context)">
-						<xsl:value-of select="'#{end}'"/>
-					</xsl:if>
-				</fo:block>
+					<fo:block>
+						<xsl:copy-of select="$response-content"/>
+					</fo:block>
+				</fo:table-cell>
 			</xsl:when>
 			<xsl:otherwise>
-				<fo:block xsl:use-attribute-sets="general-style">
-					<xsl:if test="enofo:is-initializable-variable($source-context)">
-						<xsl:value-of select="$variable-personalization-begin"/>
-					</xsl:if>
-					<xsl:call-template name="insert-image">
-						<xsl:with-param name="image-name" select="concat('date-',$numeric-capture-character,'-',$languages[1],'-',$field-image-name,'.png')"/>
-					</xsl:call-template>
-					<xsl:if test="enofo:is-initializable-variable($source-context)">
-						<xsl:value-of select="'#{end}'"/>
-					</xsl:if>
-				</fo:block>
+				<xsl:copy-of select="$response-content"/>
 			</xsl:otherwise>
 		</xsl:choose>
-		<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-			<xsl:with-param name="driver" select="." tunnel="yes"/>
-		</xsl:apply-templates>
 	</xsl:template>
 
 	<xsl:template match="main//DurationDomain" mode="model">
@@ -1097,131 +1160,150 @@
 		</xsl:variable>
 		<xsl:variable name="variable-personalization-begin" select="concat('#{if}(',$variable-name,')',$variable-name,'#{else}')"/>
 
-		<fo:inline>
-			<xsl:variable name="duration-content" as="node() *">
+		<xsl:variable name="response-content" as="node()*">
+			<fo:inline>
+				<xsl:variable name="duration-content" as="node() *">
+					<xsl:choose>
+						<xsl:when test="$field='HH:CH'">
+							<xsl:call-template name="insert-image">
+								<xsl:with-param name="image-name" select="'mask_number.png'"/>
+							</xsl:call-template>
+							<xsl:call-template name="insert-image">
+								<xsl:with-param name="image-name" select="'mask_number.png'"/>
+							</xsl:call-template>
+							<fo:inline padding-start="1mm" padding-end="2mm">heures</fo:inline>
+							<xsl:call-template name="insert-image">
+								<xsl:with-param name="image-name" select="'mask_number.png'"/>
+							</xsl:call-template>
+							<xsl:call-template name="insert-image">
+								<xsl:with-param name="image-name" select="'mask_number.png'"/>
+							</xsl:call-template>
+							<fo:inline padding-start="1mm" padding-end="2mm">centièmes</fo:inline>
+						</xsl:when>
+						<xsl:otherwise>
+							<xsl:variable name="first-number-position" select="string-length(substring-before($field,'N'))+1"/>
+							<xsl:variable name="maximum-duration" select="enofo:get-maximum($source-context)"/>
+							<xsl:for-each select="1 to string-length($field)">
+								<xsl:variable name="current-position" select="position()"/>
+								<xsl:variable name="current-character" select="substring($field,$current-position,1)"/>
+								<xsl:choose>
+									<xsl:when test="$current-character = 'P'"/>
+									<xsl:when test="$current-character = 'T'"/>
+									<xsl:when test="$current-character = 'N'">
+										<xsl:variable name="number-of-characters">
+											<xsl:choose>
+												<xsl:when test="$current-position = $first-number-position and $maximum-duration != ''">
+													<xsl:variable name="duration-regex" select="concat('^PT?([0-9]+)',substring($field,$current-position+1,1),'.*$')"/>
+													<xsl:analyze-string select="$maximum-duration" regex="{$duration-regex}">
+														<xsl:matching-substring>
+															<xsl:value-of select="string-length(regex-group(1))"/>
+														</xsl:matching-substring>
+														<xsl:non-matching-substring>
+															<xsl:value-of select="'2'"/>
+														</xsl:non-matching-substring>
+													</xsl:analyze-string>
+												</xsl:when>
+												<xsl:otherwise>
+													<xsl:value-of select="'2'"/>
+												</xsl:otherwise>
+											</xsl:choose>
+										</xsl:variable>
+										<xsl:for-each select="1 to xs:integer(number($number-of-characters))">
+											<xsl:call-template name="insert-image">
+												<xsl:with-param name="image-name" select="'mask_number.png'"/>
+											</xsl:call-template>
+										</xsl:for-each>
+									</xsl:when>
+									<xsl:when test="$current-character = 'Y' or $current-character = 'A'">
+										<fo:inline padding-start="1mm" padding-end="3mm">
+											<xsl:value-of select="$labels-resource/Languages/Language[@xml:lang=$languages[1]]/Duration/Year"/>
+										</fo:inline>
+									</xsl:when>
+									<xsl:when test="$current-character = 'D' or $current-character = 'J'">
+										<fo:inline padding-start="1mm" padding-end="3mm">
+											<xsl:value-of select="$labels-resource/Languages/Language[@xml:lang=$languages[1]]/Duration/Day"/>
+										</fo:inline>
+									</xsl:when>
+									<xsl:when test="$current-character = 'H'">
+										<fo:inline padding-start="1mm" padding-end="3mm">
+											<xsl:value-of select="$labels-resource/Languages/Language[@xml:lang=$languages[1]]/Duration/Hour"/>
+										</fo:inline>
+									</xsl:when>
+									<xsl:when test="$current-character = 'S'">
+										<fo:inline padding-start="1mm" padding-end="3mm">
+											<xsl:value-of select="$labels-resource/Languages/Language[@xml:lang=$languages[1]]/Duration/Second"/>
+										</fo:inline>
+									</xsl:when>
+									<xsl:when test="$current-character = 'M' and not(contains(substring($field,1,position()),'T'))">
+										<fo:inline padding-start="1mm" padding-end="3mm">
+											<xsl:value-of select="$labels-resource/Languages/Language[@xml:lang=$languages[1]]/Duration/Month"/>
+										</fo:inline>
+									</xsl:when>
+									<xsl:when test="$current-character = 'M' and contains(substring($field,1,position()),'T')">
+										<fo:inline padding-start="1mm" padding-end="3mm">
+											<xsl:value-of select="$labels-resource/Languages/Language[@xml:lang=$languages[1]]/Duration/Minute"/>
+										</fo:inline>
+									</xsl:when>
+									<xsl:otherwise>
+										<fo:inline padding-start="1mm" padding-end="3mm">unité de temps inconnue</fo:inline>
+									</xsl:otherwise>
+								</xsl:choose>
+							</xsl:for-each>
+						</xsl:otherwise>
+					</xsl:choose>
+				</xsl:variable>
 				<xsl:choose>
-					<xsl:when test="$field='HH:CH'">
-						<xsl:call-template name="insert-image">
-							<xsl:with-param name="image-name" select="'mask_number.png'"/>
-						</xsl:call-template>
-						<xsl:call-template name="insert-image">
-							<xsl:with-param name="image-name" select="'mask_number.png'"/>
-						</xsl:call-template>
-						<fo:inline padding-start="1mm" padding-end="2mm">heures</fo:inline>
-						<xsl:call-template name="insert-image">
-							<xsl:with-param name="image-name" select="'mask_number.png'"/>
-						</xsl:call-template>
-						<xsl:call-template name="insert-image">
-							<xsl:with-param name="image-name" select="'mask_number.png'"/>
-						</xsl:call-template>
-						<fo:inline padding-start="1mm" padding-end="2mm">centièmes</fo:inline>
-					</xsl:when>
-					<xsl:otherwise>
-						<xsl:variable name="first-number-position" select="string-length(substring-before($field,'N'))+1"/>
-						<xsl:variable name="maximum-duration" select="enofo:get-maximum($source-context)"/>
-						<xsl:for-each select="1 to string-length($field)">
-							<xsl:variable name="current-position" select="position()"/>
-							<xsl:variable name="current-character" select="substring($field,$current-position,1)"/>
+					<xsl:when test="ancestor::Cell">
+						<fo:block xsl:use-attribute-sets="label-cell">
 							<xsl:choose>
-								<xsl:when test="$current-character = 'P'"/>
-								<xsl:when test="$current-character = 'T'"/>
-								<xsl:when test="$current-character = 'N'">
-									<xsl:variable name="number-of-characters">
-										<xsl:choose>
-											<xsl:when test="$current-position = $first-number-position and $maximum-duration != ''">
-												<xsl:variable name="duration-regex" select="concat('^PT?([0-9]+)',substring($field,$current-position+1,1),'.*$')"/>
-												<xsl:analyze-string select="$maximum-duration" regex="{$duration-regex}">
-													<xsl:matching-substring>
-														<xsl:value-of select="string-length(regex-group(1))"/>
-													</xsl:matching-substring>
-													<xsl:non-matching-substring>
-														<xsl:value-of select="'2'"/>
-													</xsl:non-matching-substring>
-												</xsl:analyze-string>
-											</xsl:when>
-											<xsl:otherwise>
-												<xsl:value-of select="'2'"/>
-											</xsl:otherwise>
-										</xsl:choose>
-									</xsl:variable>
-									<xsl:for-each select="1 to xs:integer(number($number-of-characters))">
-										<xsl:call-template name="insert-image">
-											<xsl:with-param name="image-name" select="'mask_number.png'"/>
-										</xsl:call-template>
-									</xsl:for-each>
-								</xsl:when>
-								<xsl:when test="$current-character = 'Y' or $current-character = 'A'">
-									<fo:inline padding-start="1mm" padding-end="3mm">
-										<xsl:value-of select="$labels-resource/Languages/Language[@xml:lang=$languages[1]]/Duration/Year"/>
-									</fo:inline>
-								</xsl:when>
-								<xsl:when test="$current-character = 'D' or $current-character = 'J'">
-									<fo:inline padding-start="1mm" padding-end="3mm">
-										<xsl:value-of select="$labels-resource/Languages/Language[@xml:lang=$languages[1]]/Duration/Day"/>
-									</fo:inline>
-								</xsl:when>
-								<xsl:when test="$current-character = 'H'">
-									<fo:inline padding-start="1mm" padding-end="3mm">
-										<xsl:value-of select="$labels-resource/Languages/Language[@xml:lang=$languages[1]]/Duration/Hour"/>
-									</fo:inline>
-								</xsl:when>
-								<xsl:when test="$current-character = 'S'">
-									<fo:inline padding-start="1mm" padding-end="3mm">
-										<xsl:value-of select="$labels-resource/Languages/Language[@xml:lang=$languages[1]]/Duration/Second"/>
-									</fo:inline>
-								</xsl:when>
-								<xsl:when test="$current-character = 'M' and not(contains(substring($field,1,position()),'T'))">
-									<fo:inline padding-start="1mm" padding-end="3mm">
-										<xsl:value-of select="$labels-resource/Languages/Language[@xml:lang=$languages[1]]/Duration/Month"/>
-									</fo:inline>
-								</xsl:when>
-								<xsl:when test="$current-character = 'M' and contains(substring($field,1,position()),'T')">
-									<fo:inline padding-start="1mm" padding-end="3mm">
-										<xsl:value-of select="$labels-resource/Languages/Language[@xml:lang=$languages[1]]/Duration/Minute"/>
-									</fo:inline>
+								<xsl:when test="enofo:is-initializable-variable($source-context)">
+									<xsl:value-of select="concat('#{if}(',$variable-name,')',$variable-name,'#{else}')"/>
+									<xsl:copy-of select="$duration-content"/>
+									<xsl:value-of select="'#{end}'"/>
 								</xsl:when>
 								<xsl:otherwise>
-									<fo:inline padding-start="1mm" padding-end="3mm">unité de temps inconnue</fo:inline>
+									<xsl:copy-of select="$duration-content"/>
 								</xsl:otherwise>
 							</xsl:choose>
-						</xsl:for-each>
+						</fo:block>
+					</xsl:when>
+					<xsl:otherwise>
+						<fo:block xsl:use-attribute-sets="general-style">
+							<xsl:choose>
+								<xsl:when test="enofo:is-initializable-variable($source-context)">
+									<xsl:value-of select="concat('#{if}(',$variable-name,')',$variable-name,'#{else}')"/>
+									<xsl:copy-of select="$duration-content"/>
+									<xsl:value-of select="'#{end}'"/>
+								</xsl:when>
+								<xsl:otherwise>
+									<xsl:copy-of select="$duration-content"/>
+								</xsl:otherwise>
+							</xsl:choose>
+						</fo:block>
 					</xsl:otherwise>
 				</xsl:choose>
-			</xsl:variable>
-			<xsl:choose>
-				<xsl:when test="ancestor::Cell">
-					<fo:block xsl:use-attribute-sets="label-cell">
-						<xsl:choose>
-							<xsl:when test="enofo:is-initializable-variable($source-context)">
-								<xsl:value-of select="concat('#{if}(',$variable-name,')',$variable-name,'#{else}')"/>
-								<xsl:copy-of select="$duration-content"/>
-								<xsl:value-of select="'#{end}'"/>
-							</xsl:when>
-							<xsl:otherwise>
-								<xsl:copy-of select="$duration-content"/>
-							</xsl:otherwise>
-						</xsl:choose>
+			</fo:inline>
+			<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
+				<xsl:with-param name="driver" select="." tunnel="yes"/>
+			</xsl:apply-templates>			
+		</xsl:variable>
+		<xsl:choose>
+			<xsl:when test="$isTable = 'YES' and not(ancestor::Clarification)">
+				<fo:table-cell xsl:use-attribute-sets="data-cell">
+					<xsl:if test="$no-border = 'no-border'">
+						<xsl:attribute name="border">0mm</xsl:attribute>
+						<xsl:attribute name="padding-top">0mm</xsl:attribute>
+						<xsl:attribute name="padding-bottom">0mm</xsl:attribute>
+					</xsl:if>
+					<fo:block>
+						<xsl:copy-of select="$response-content"/>
 					</fo:block>
-				</xsl:when>
-				<xsl:otherwise>
-					<fo:block xsl:use-attribute-sets="general-style">
-						<xsl:choose>
-							<xsl:when test="enofo:is-initializable-variable($source-context)">
-								<xsl:value-of select="concat('#{if}(',$variable-name,')',$variable-name,'#{else}')"/>
-								<xsl:copy-of select="$duration-content"/>
-								<xsl:value-of select="'#{end}'"/>
-							</xsl:when>
-							<xsl:otherwise>
-								<xsl:copy-of select="$duration-content"/>
-							</xsl:otherwise>
-						</xsl:choose>
-					</fo:block>
-				</xsl:otherwise>
-			</xsl:choose>
-		</fo:inline>
-		<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-			<xsl:with-param name="driver" select="." tunnel="yes"/>
-		</xsl:apply-templates>
+				</fo:table-cell>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:copy-of select="$response-content"/>
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
 
 	<xsl:template match="main//CodeDomain | main//BooleanDomain" mode="model">
@@ -1237,78 +1319,97 @@
 			</xsl:call-template>
 		</xsl:variable>
 
-		<xsl:choose>
-			<xsl:when test="enofo:get-appearance($source-context) = 'drop-down-list'">
-				<xsl:choose>
-					<xsl:when test="$no-border = 'no-border'">
-						<fo:block-container height="8mm" width="50mm">
-							<fo:block border-color="black" border-style="solid" width="50mm">
-								<xsl:choose>
-									<xsl:when test="enofo:is-initializable-variable($source-context)">
-										<xsl:value-of select="concat('#{if}(',$variable-name,')',$variable-name,'#{else}&#160;#{end}')"/>
-									</xsl:when>
-									<xsl:otherwise>
-										<xsl:value-of select="'&#160;'"/>
-									</xsl:otherwise>
-								</xsl:choose>
-							</fo:block>
-						</fo:block-container>
-					</xsl:when>
-					<xsl:when test="$isTable = 'YES'">
-						<fo:block-container height="8mm" width="50mm">
-							<fo:block>
-								<xsl:choose>
-								<xsl:when test="enofo:is-initializable-variable($source-context)">
-									<xsl:value-of select="concat('#{if}(',$variable-name,')',$variable-name,'#{else}&#160;#{end}')"/>
-								</xsl:when>
-								<xsl:otherwise>
-									<xsl:value-of select="'&#160;'"/>
-								</xsl:otherwise>
-							</xsl:choose>
-							</fo:block>
-						</fo:block-container>
-					</xsl:when>
-					<xsl:otherwise>
-						<fo:block-container height="8mm" border-color="black" border-style="solid" width="100%">
-							<fo:block>
-								<xsl:choose>
-									<xsl:when test="enofo:is-initializable-variable($source-context)">
-										<xsl:value-of select="concat('#{if}(',$variable-name,')',$variable-name,'#{else}&#160;#{end}')"/>
-									</xsl:when>
-									<xsl:otherwise>
-										<xsl:value-of select="'&#160;'"/>
-									</xsl:otherwise>
-								</xsl:choose>
-							</fo:block>
-						</fo:block-container>
-					</xsl:otherwise>
-				</xsl:choose>
-			</xsl:when>
-			<xsl:when test="$no-border = 'no-border'">
-				<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-					<xsl:with-param name="driver" select="." tunnel="yes"/>
-					<xsl:with-param name="variable-name" select="$variable-name" tunnel="yes"/>
-				</xsl:apply-templates>
-			</xsl:when>
-			<!-- image codes are supposed to be scale codes, which have to be in horizontal mode -->
-			<xsl:when test="enofo:get-style($source-context) = 'image'">
-				<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-					<xsl:with-param name="driver" select="." tunnel="yes"/>
-					<xsl:with-param name="variable-name" select="$variable-name" tunnel="yes"/>
-				</xsl:apply-templates>
-			</xsl:when>
-			<xsl:otherwise>
-				<fo:list-block>
+		<xsl:variable name="response-content" as="node()*">
+			<xsl:choose>
+				<xsl:when test="enofo:get-appearance($source-context) = 'drop-down-list'">
+					<xsl:choose>
+						<xsl:when test="$no-border = 'no-border'">
+							<fo:block-container height="8mm" width="50mm">
+								<fo:block border-color="black" border-style="solid" width="50mm">
+									<xsl:choose>
+										<xsl:when test="enofo:is-initializable-variable($source-context)">
+											<xsl:value-of select="concat('#{if}(',$variable-name,')',$variable-name,'#{else}&#160;#{end}')"/>
+										</xsl:when>
+										<xsl:otherwise>
+											<xsl:value-of select="'&#160;'"/>
+										</xsl:otherwise>
+									</xsl:choose>
+								</fo:block>
+							</fo:block-container>
+						</xsl:when>
+						<xsl:when test="$isTable = 'YES'">
+							<fo:block-container height="8mm" width="50mm">
+								<fo:block>
+									<xsl:choose>
+										<xsl:when test="enofo:is-initializable-variable($source-context)">
+											<xsl:value-of select="concat('#{if}(',$variable-name,')',$variable-name,'#{else}&#160;#{end}')"/>
+										</xsl:when>
+										<xsl:otherwise>
+											<xsl:value-of select="'&#160;'"/>
+										</xsl:otherwise>
+									</xsl:choose>
+								</fo:block>
+							</fo:block-container>
+						</xsl:when>
+						<xsl:otherwise>
+							<fo:block-container height="8mm" border-color="black" border-style="solid" width="100%">
+								<fo:block>
+									<xsl:choose>
+										<xsl:when test="enofo:is-initializable-variable($source-context)">
+											<xsl:value-of select="concat('#{if}(',$variable-name,')',$variable-name,'#{else}&#160;#{end}')"/>
+										</xsl:when>
+										<xsl:otherwise>
+											<xsl:value-of select="'&#160;'"/>
+										</xsl:otherwise>
+									</xsl:choose>
+								</fo:block>
+							</fo:block-container>
+						</xsl:otherwise>
+					</xsl:choose>
+				</xsl:when>
+				<xsl:when test="$no-border = 'no-border'">
 					<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
 						<xsl:with-param name="driver" select="." tunnel="yes"/>
 						<xsl:with-param name="variable-name" select="$variable-name" tunnel="yes"/>
 					</xsl:apply-templates>
-				</fo:list-block>
+				</xsl:when>
+				<!-- image codes are supposed to be scale codes, which have to be in horizontal mode -->
+				<xsl:when test="enofo:get-style($source-context) = 'image'">
+					<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
+						<xsl:with-param name="driver" select="." tunnel="yes"/>
+						<xsl:with-param name="variable-name" select="$variable-name" tunnel="yes"/>
+					</xsl:apply-templates>
+				</xsl:when>
+				<xsl:otherwise>
+					<fo:list-block>
+						<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
+							<xsl:with-param name="driver" select="." tunnel="yes"/>
+							<xsl:with-param name="variable-name" select="$variable-name" tunnel="yes"/>
+						</xsl:apply-templates>
+					</fo:list-block>
+				</xsl:otherwise>
+			</xsl:choose>			
+		</xsl:variable>
+		<xsl:choose>
+			<xsl:when test="$isTable = 'YES' and not(ancestor::Clarification)">
+				<fo:table-cell xsl:use-attribute-sets="data-cell">
+					<xsl:if test="$no-border = 'no-border'">
+						<xsl:attribute name="border">0mm</xsl:attribute>
+						<xsl:attribute name="padding-top">0mm</xsl:attribute>
+						<xsl:attribute name="padding-bottom">0mm</xsl:attribute>
+					</xsl:if>
+					<fo:block>
+						<xsl:copy-of select="$response-content"/>
+					</fo:block>
+				</fo:table-cell>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:copy-of select="$response-content"/>
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
 
-	<xsl:template match="main//xf-item" mode="model">
+	<xsl:template match="main//Code[ancestor::CodeDomain or ancestor::BooleanDomain]" mode="model">
 		<xsl:param name="source-context" as="item()" tunnel="yes"/>
 		<xsl:param name="no-border" tunnel="yes"/>
 		<xsl:param name="languages" tunnel="yes"/>
