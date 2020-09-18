@@ -270,12 +270,9 @@
     </xsl:template>
     <xsl:template match="Instance//CodeList[not(ancestor::CodeDomain)]" mode="model">
         <xsl:param name="source-context" as="item()" tunnel="yes"/>
-        <xsl:param name="languages" tunnel="yes"/>
         <xsl:variable name="name" select="enoxforms:get-cell-name($source-context)"/>
         <xsl:if test="$name != ''">
-            <xsl:for-each select="enoxforms:get-label($source-context,$languages)">
-                <xsl:element name="{$name}-{position()}"/>
-            </xsl:for-each>
+            <xsl:element name="{$name}}"/>
         </xsl:if>
     </xsl:template>
 
@@ -616,14 +613,11 @@
     </xsl:template>
     <xsl:template match="Bind//CodeList[not(ancestor::CodeDomain)]" mode="model">
         <xsl:param name="source-context" as="item()" tunnel="yes"/>
-        <xsl:param name="languages" tunnel="yes"/>
+
         <xsl:variable name="name" select="enoxforms:get-cell-name($source-context)"/>
-        <xsl:variable name="type" select="enoxforms:get-type($source-context)"/>
 
         <xsl:if test="$name != ''">
-            <xsl:for-each select="enoxforms:get-label($source-context,$languages)">
-                <xf:bind id="{$name}-{position()}-bind" name="{$name}-{position()}" ref="{$name}-{position()}"/>
-            </xsl:for-each>
+            <xf:bind id="{$name}}-bind" name="{$name}}" ref="{$name}}"/>
         </xsl:if>
     </xsl:template>
 
@@ -1607,17 +1601,13 @@
         <xsl:param name="language" tunnel="yes"/>
 
         <xsl:variable name="name" select="enoxforms:get-cell-name($source-context)"/>
-        <xsl:if test="$name != ''">
-            <xsl:if test="enoxforms:is-codelist-label-shown($source-context)">
-                <xsl:message select="concat(enoxforms:get-cell-name($source-context),eno:serialize(enoxforms:get-label($source-context, $language)),enoxforms:get-cell-name($source-context))"/>
-                <xsl:for-each select="enoxforms:get-label($source-context, $language)">
-                    <xsl:element name="{$name}-{position()}">
-                        <label>
-                            <xsl:value-of select="eno:serialize(.)"/>
-                        </label>
-                    </xsl:element>
-                </xsl:for-each>
-            </xsl:if>
+        <xsl:variable name="label" select="enoxforms:get-label($source-context, $language)"/>
+        <xsl:if test="$name != '' and enoxforms:is-codelist-label-shown($source-context)">
+            <xsl:element name="{$name}}">
+                <label>
+                    <xsl:value-of select="eno:serialize($label)"/>
+                </label>
+            </xsl:element>
         </xsl:if>
         <xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
             <xsl:with-param name="driver" select="." tunnel="yes"/>
@@ -2557,32 +2547,30 @@
         <xsl:variable name="colspan" select="enoxforms:get-colspan($source-context)"/>
         <xsl:variable name="rowspan" select="enoxforms:get-rowspan($source-context)"/>
         <xsl:variable name="codelist-name" select="enoxforms:get-cell-name($source-context)"/>
+        <xsl:variable name="codelist-label" select="enoxforms:get-label($source-context, $language[1])"/>
         <xsl:variable name="conditioning-variables" select="enoxforms:get-label-conditioning-variables($source-context, $languages[1])" as="xs:string*"/>
         <xsl:variable name="show-label" select="enoxforms:is-codelist-label-shown($source-context)" as="xs:boolean"/>
 
         <xsl:if test="$codelist-name != ''">
-            <xsl:for-each select="enoxforms:get-label($source-context,$languages)">
-                <xsl:variable name="name" select="concat($codelist-name,'-',position())"/>
-                <xhtml:th colspan="{$colspan}" rowspan="{$rowspan}">
-                    <xf:output id="{$name}-control" name="{$name}" bind="{$name}-bind">
-                        <xsl:if test=". != '' and $show-label">
-                            <xf:label>
-                                <xsl:attribute name="ref">
-                                    <xsl:call-template name="label-ref-condition">
-                                        <xsl:with-param name="source-context" select="$source-context"/>
-                                        <xsl:with-param name="label" select="concat('$form-resources/',$name,'/label')"/>
-                                        <xsl:with-param name="conditioning-variables" select="$conditioning-variables"/>
-                                        <xsl:with-param name="instance-ancestor" select="$instance-ancestor"/>
-                                    </xsl:call-template>
-                                </xsl:attribute>
-                                <xsl:if test="eno:is-rich-content(.)">
-                                    <xsl:attribute name="mediatype">text/html</xsl:attribute>
-                                </xsl:if>
-                            </xf:label>
-                        </xsl:if>
-                    </xf:output>
-                </xhtml:th>
-            </xsl:for-each>            
+            <xhtml:th colspan="{$colspan}" rowspan="{$rowspan}">
+                <xf:output id="{$codelist-name}-control" name="{$codelist-name}" bind="{$codelist-name}-bind">
+                    <xsl:if test="$codelist-label != '' and $show-label">
+                        <xf:label>
+                            <xsl:attribute name="ref">
+                                <xsl:call-template name="label-ref-condition">
+                                    <xsl:with-param name="source-context" select="$source-context"/>
+                                    <xsl:with-param name="label" select="concat('$form-resources/',$codelist-name,'/label')"/>
+                                    <xsl:with-param name="conditioning-variables" select="$conditioning-variables"/>
+                                    <xsl:with-param name="instance-ancestor" select="$instance-ancestor"/>
+                                </xsl:call-template>
+                            </xsl:attribute>
+                            <xsl:if test="eno:is-rich-content($codelist-label)">
+                                <xsl:attribute name="mediatype">text/html</xsl:attribute>
+                            </xsl:if>
+                        </xf:label>
+                    </xsl:if>
+                </xf:output>
+            </xhtml:th>
         </xsl:if>
     </xsl:template>
 
