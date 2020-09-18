@@ -114,30 +114,6 @@
 
     <!--*****************************Perso instance, adherence in already existing perso instances and in an Orbeon css*****************************-->
 
-    <!-- Change '-Header-' to '-entete-'. Used in a css on the Orbeon side. -->
-    <xsl:template
-        match="*[ancestor::xf:instance[@id='fr-form-instance' or @id='fr-form-loop-model'] and contains(name(),'-Header-')]">
-        <xsl:element name="{replace(name(),'\-Header\-','-entete-')}">
-            <xsl:apply-templates select="node() | @*"/>
-        </xsl:element>
-    </xsl:template>
-    <xsl:template match="xf:bind[contains(@id,'-Header-')]">
-        <xsl:element name="xf:bind">
-            <xsl:attribute name="id" select="replace(@id,'\-Header\-','-entete-')"/>
-            <xsl:attribute name="name" select="replace(@name,'\-Header\-','-entete-')"/>
-            <xsl:attribute name="ref" select="replace(@ref,'\-Header\-','-entete-')"/>
-        </xsl:element>
-    </xsl:template>
-    <xsl:template match="@*[contains(.,'-Header-')]">
-        <xsl:attribute name="{name()}" select="replace(.,'\-Header\-','-entete-')"/>
-    </xsl:template>
-    <xsl:template
-        match="*[ancestor::xf:instance[@id='fr-form-resources'] and contains(name(),'-Header-')]">
-        <xsl:element name="{replace(name(),'\-Header\-','-entete-')}">
-            <xsl:apply-templates select="node() | @*"/>
-        </xsl:element>
-    </xsl:template>
-
     <xsl:template match="Validation[ancestor::xf:instance[@id='fr-form-instance' or @id='fr-form-util']]">
         <VALIDATION/>
     </xsl:template>
