@@ -272,7 +272,7 @@
         <xsl:param name="source-context" as="item()" tunnel="yes"/>
         <xsl:variable name="name" select="enoxforms:get-cell-name($source-context)"/>
         <xsl:if test="$name != ''">
-            <xsl:element name="{$name}}"/>
+            <xsl:element name="{$name}"/>
         </xsl:if>
     </xsl:template>
 
@@ -617,7 +617,7 @@
         <xsl:variable name="name" select="enoxforms:get-cell-name($source-context)"/>
 
         <xsl:if test="$name != ''">
-            <xf:bind id="{$name}}-bind" name="{$name}}" ref="{$name}}"/>
+            <xf:bind id="{$name}-bind" name="{$name}" ref="{$name}"/>
         </xsl:if>
     </xsl:template>
 
@@ -1603,7 +1603,7 @@
         <xsl:variable name="name" select="enoxforms:get-cell-name($source-context)"/>
         <xsl:variable name="label" select="enoxforms:get-label($source-context, $language)"/>
         <xsl:if test="$name != '' and enoxforms:is-codelist-label-shown($source-context)">
-            <xsl:element name="{$name}}">
+            <xsl:element name="{$name}">
                 <label>
                     <xsl:value-of select="eno:serialize($label)"/>
                 </label>
@@ -2547,7 +2547,7 @@
         <xsl:variable name="colspan" select="enoxforms:get-colspan($source-context)"/>
         <xsl:variable name="rowspan" select="enoxforms:get-rowspan($source-context)"/>
         <xsl:variable name="codelist-name" select="enoxforms:get-cell-name($source-context)"/>
-        <xsl:variable name="codelist-label" select="enoxforms:get-label($source-context, $language[1])"/>
+        <xsl:variable name="codelist-label" select="enoxforms:get-label($source-context, $languages[1])"/>
         <xsl:variable name="conditioning-variables" select="enoxforms:get-label-conditioning-variables($source-context, $languages[1])" as="xs:string*"/>
         <xsl:variable name="show-label" select="enoxforms:is-codelist-label-shown($source-context)" as="xs:boolean"/>
 
