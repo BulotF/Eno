@@ -456,6 +456,7 @@
 					<xsl:apply-templates select="enofo:get-header-line($source-context, position())" mode="source">
 						<xsl:with-param name="driver" select="$current-match" tunnel="yes"/>
 						<xsl:with-param name="header" select="'YES'" tunnel="yes"/>
+						<xsl:with-param name="isTable" select="'YES'" tunnel="yes"/>
 						<xsl:with-param name="no-border" select="$no-border" tunnel="yes"/>
 					</xsl:apply-templates>
 				</fo:table-row>
@@ -528,6 +529,7 @@
 							<fo:table-row border-color="black">
 								<xsl:apply-templates select="enofo:get-body-line($source-context, $position)" mode="source">
 									<xsl:with-param name="driver" select="$current-match" tunnel="yes"/>
+									<xsl:with-param name="isTable" select="'YES'" tunnel="yes"/>
 									<xsl:with-param name="no-border" select="$no-border" tunnel="yes"/>
 									<xsl:with-param name="loop-position" select="concat($loop-position,'-$',$loop-name,'.LoopPosition')" tunnel="yes"/>
 									<xsl:with-param name="loop-navigation" as="node()" tunnel="yes">
@@ -564,6 +566,7 @@
 								<fo:table-row border-color="black">
 									<xsl:apply-templates select="enofo:get-body-line($source-context, $position)" mode="source">
 										<xsl:with-param name="driver" select="$current-match" tunnel="yes"/>
+										<xsl:with-param name="isTable" select="'YES'" tunnel="yes"/>
 										<xsl:with-param name="no-border" select="$no-border" tunnel="yes"/>
 										<xsl:with-param name="loop-position" select="concat($loop-position,'-0',$empty-position)" tunnel="yes"/>
 										<xsl:with-param name="empty-occurrence" as="xs:boolean" select="true()" tunnel="yes"/>
@@ -591,7 +594,7 @@
 		</xsl:apply-templates>
 	</xsl:template>
 
-	<xsl:template match="main//TextCell" mode="model">
+	<xsl:template match="main//CodeDimension | main//*[name()='CodeList' or name()='Code'][not(ancestor::CodeDomain) and not(ancestor::BooleanDomain)]" mode="model">
 		<xsl:param name="source-context" as="item()" tunnel="yes"/>
 		<xsl:param name="languages" tunnel="yes"/>
 		<xsl:param name="loop-navigation" as="node()" tunnel="yes"/>
@@ -615,7 +618,9 @@
 				<xsl:if test="not($header)">
 					<xsl:attribute name="margin-left" select="'1mm'"/>
 				</xsl:if>
-				<xsl:copy-of select="enofo:get-label($source-context, $languages[1],$loop-navigation)"/>
+				<xsl:if test="not(self::CodeList) or enofo:is-codelist-label-shown($source-context)">
+					<xsl:copy-of select="enofo:get-label($source-context, $languages[1],$loop-navigation)"/>	
+				</xsl:if>
 			</fo:block>
 		</fo:table-cell>
 	</xsl:template>
@@ -679,6 +684,7 @@
 		<xsl:param name="source-context" as="item()" tunnel="yes"/>
 		<xsl:param name="languages" tunnel="yes"/>
 		<xsl:param name="isTable" tunnel="yes"/>
+		<xsl:param name="no-border" tunnel="yes"/>
 		<xsl:param name="loop-navigation" as="node()" tunnel="yes"/>
 
 		<xsl:variable name="height" select="8*number($textarea-defaultsize)"/>
@@ -929,7 +935,7 @@
 							</xsl:for-each>
 						</xsl:variable>
 						<xsl:choose>
-							<xsl:when test="ancestor::Cell">
+							<xsl:when test="$isTable = 'YES'">
 								<fo:block xsl:use-attribute-sets="label-cell" padding-bottom="0mm" padding-top="0mm">
 									<xsl:choose>
 										<xsl:when test="enofo:is-initializable-variable($source-context)">
@@ -988,7 +994,7 @@
 							</fo:inline-container>
 						</xsl:variable>
 						<xsl:choose>
-							<xsl:when test="ancestor::Cell">
+							<xsl:when test="$isTable = 'YES'">
 								<fo:block xsl:use-attribute-sets="label-cell" padding-bottom="0mm" padding-top="0mm">
 									<xsl:choose>
 										<xsl:when test="enofo:is-initializable-variable($source-context)">
@@ -1150,6 +1156,8 @@
 		<xsl:param name="source-context" as="item()" tunnel="yes"/>
 		<xsl:param name="languages" tunnel="yes"/>
 		<xsl:param name="loop-navigation" as="node()" tunnel="yes"/>
+		<xsl:param name="isTable" tunnel="yes"/>
+		<xsl:param name="no-border" tunnel="yes"/>
 
 		<xsl:variable name="field" select="upper-case(enofo:get-format($source-context))"/>
 		<xsl:variable name="variable-name" as="xs:string">
@@ -1253,7 +1261,7 @@
 					</xsl:choose>
 				</xsl:variable>
 				<xsl:choose>
-					<xsl:when test="ancestor::Cell">
+					<xsl:when test="$isTable = 'YES'">
 						<fo:block xsl:use-attribute-sets="label-cell">
 							<xsl:choose>
 								<xsl:when test="enofo:is-initializable-variable($source-context)">
