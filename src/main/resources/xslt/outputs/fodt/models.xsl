@@ -152,50 +152,76 @@
 	<xsl:template match="NumericDomain" mode="model">
 		<xsl:param name="source-context" as="item()" tunnel="yes"/>
 		<xsl:param name="languages" tunnel="yes"/>
+		<xsl:param name="typeOfAncestor" tunnel="yes"/>
 		<xsl:variable name="numberOfDecimals" select="enofodt:get-number-of-decimals($source-context)"/>
 		<xsl:variable name="minimumResponse" select="enofodt:get-minimum($source-context)"/>
 		<xsl:variable name="maximumResponse" select="enofodt:get-maximum($source-context)"/>
 		<xsl:variable name="nameOfVariable" select="enofodt:get-business-name($source-context)"/>
 
-		<text:p text:style-name="Format">
-			<text:span text:style-name="NameOfVariable">
-				<xsl:value-of select="concat('[', $nameOfVariable, '] - ')"/>
-			</text:span>
-			<xsl:choose>
-				<xsl:when test="fn:string-length($numberOfDecimals) > 0">
-					<xsl:value-of select="concat('num ', fn:substring-before($minimumResponse, '.'), '..', fn:substring-before($maximumResponse, '.'), ' - ', $numberOfDecimals, ' chiffre(s) après la virgule')"/>
-				</xsl:when>
-				<xsl:when test="fn:string-length($numberOfDecimals) = 0">
-					<xsl:value-of select="concat('num ', $minimumResponse, '..', $maximumResponse)"/>
-				</xsl:when>
-			</xsl:choose>
-		</text:p>
-		<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-			<xsl:with-param name="driver" select="." tunnel="yes"/>
-		</xsl:apply-templates>
+		<xsl:variable name="response-content" as="node()*">
+			<text:p text:style-name="Format">
+				<text:span text:style-name="NameOfVariable">
+					<xsl:value-of select="concat('[', $nameOfVariable, '] - ')"/>
+				</text:span>
+				<xsl:choose>
+					<xsl:when test="fn:string-length($numberOfDecimals) > 0">
+						<xsl:value-of select="concat('num ', fn:substring-before($minimumResponse, '.'), '..', fn:substring-before($maximumResponse, '.'), ' - ', $numberOfDecimals, ' chiffre(s) après la virgule')"/>
+					</xsl:when>
+					<xsl:when test="fn:string-length($numberOfDecimals) = 0">
+						<xsl:value-of select="concat('num ', $minimumResponse, '..', $maximumResponse)"/>
+					</xsl:when>
+				</xsl:choose>
+			</text:p>
+			<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
+				<xsl:with-param name="driver" select="." tunnel="yes"/>
+			</xsl:apply-templates>			
+		</xsl:variable>
+		<xsl:choose>
+			<xsl:when test="$typeOfAncestor != 'question' and not(ancestor::Clarification)">
+				<table:table-cell table:number-rows-spanned="1" table:number-columns-spanned="1" table:style-name="Table.Cell">
+						<xsl:copy-of select="$response-content"/>
+				</table:table-cell>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:copy-of select="$response-content"/>
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
 
 	<xd:doc>
 		<xd:desc>
-			<xd:p>Match on TextDomain driver.</xd:p>
+			<xd:p>Match on TextDomain and TextareaDomain drivers.</xd:p>
 			<xd:p>It writes the short name, the label and its response format of a question.</xd:p>
 		</xd:desc>
 	</xd:doc>
-	<xsl:template match="TextDomain" mode="model">
+	<xsl:template match="TextDomain | TextareaDomain" mode="model">
 		<xsl:param name="source-context" as="item()" tunnel="yes"/>
 		<xsl:param name="languages" tunnel="yes"/>
+		<xsl:param name="typeOfAncestor" tunnel="yes"/>
 		<xsl:variable name="lengthResponse" select="enofodt:get-length($source-context)"/>
 		<xsl:variable name="nameOfVariable" select="enofodt:get-business-name($source-context)"/>
 
-		<text:p text:style-name="Format">
-			<text:span text:style-name="NameOfVariable">
-				<xsl:value-of select="concat('[', $nameOfVariable, '] - ')"/>
-			</text:span>
-			<xsl:value-of select="concat('Car ', $lengthResponse)"/>
-		</text:p>
-		<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-			<xsl:with-param name="driver" select="." tunnel="yes"/>
-		</xsl:apply-templates>
+		<xsl:variable name="response-content" as="node()*">
+			<text:p text:style-name="Format">
+				<text:span text:style-name="NameOfVariable">
+					<xsl:value-of select="concat('[', $nameOfVariable, '] - ')"/>
+				</text:span>
+				<xsl:value-of select="concat('Car ', $lengthResponse)"/>
+			</text:p>
+			<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
+				<xsl:with-param name="driver" select="." tunnel="yes"/>
+			</xsl:apply-templates>
+		</xsl:variable>
+		<xsl:choose>
+			<xsl:when test="$typeOfAncestor != 'question' and not(ancestor::Clarification)">
+				<table:table-cell table:number-rows-spanned="1" table:number-columns-spanned="1" table:style-name="Table.Cell">
+					<xsl:copy-of select="$response-content"/>
+				</table:table-cell>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:copy-of select="$response-content"/>
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
 
 	<xd:doc>
@@ -207,40 +233,30 @@
 	<xsl:template match="DateTimeDomain" mode="model">
 		<xsl:param name="source-context" as="item()" tunnel="yes"/>
 		<xsl:param name="languages" tunnel="yes"/>
+		<xsl:param name="typeOfAncestor" tunnel="yes"/>
 		<xsl:variable name="dateFormat" select="enofodt:get-format($source-context)"/>
 		<xsl:variable name="nameOfVariable" select="enofodt:get-business-name($source-context)"/>
-		<text:p text:style-name="Format">
-			<text:span text:style-name="NameOfVariable">
-				<xsl:value-of select="concat('[', $nameOfVariable, '] - ')"/>
-			</text:span>
-			<xsl:value-of select="concat('date ( ', $dateFormat, ' )')"/>
-		</text:p>
-		<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-			<xsl:with-param name="driver" select="." tunnel="yes"/>
-		</xsl:apply-templates>
-	</xsl:template>
-
-	<xd:doc>
-		<xd:desc>
-			<xd:p>Match on TextareaDomain driver.</xd:p>
-			<xd:p>It writes the short name, the label and its response format of a question.</xd:p>
-		</xd:desc>
-	</xd:doc>
-	<xsl:template match="TextareaDomain" mode="model">
-		<xsl:param name="source-context" as="item()" tunnel="yes"/>
-		<xsl:param name="languages" tunnel="yes"/>
-		<xsl:variable name="lengthResponse" select="enofodt:get-length($source-context)"/>
-		<xsl:variable name="nameOfVariable" select="enofodt:get-business-name($source-context)"/>
-
-		<text:p text:style-name="Format">
-			<text:span text:style-name="NameOfVariable">
-				<xsl:value-of select="concat('[', $nameOfVariable, '] - ')"/>
-			</text:span>
-			<xsl:value-of select="concat('Car ', $lengthResponse)"/>
-		</text:p>
-		<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-			<xsl:with-param name="driver" select="." tunnel="yes"/>
-		</xsl:apply-templates>
+		<xsl:variable name="response-content" as="node()*">
+			<text:p text:style-name="Format">
+				<text:span text:style-name="NameOfVariable">
+					<xsl:value-of select="concat('[', $nameOfVariable, '] - ')"/>
+				</text:span>
+				<xsl:value-of select="concat('date ( ', $dateFormat, ' )')"/>
+			</text:p>
+			<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
+				<xsl:with-param name="driver" select="." tunnel="yes"/>
+			</xsl:apply-templates>
+		</xsl:variable>
+		<xsl:choose>
+			<xsl:when test="$typeOfAncestor != 'question' and not(ancestor::Clarification)">
+				<table:table-cell table:number-rows-spanned="1" table:number-columns-spanned="1" table:style-name="Table.Cell">
+					<xsl:copy-of select="$response-content"/>
+				</table:table-cell>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:copy-of select="$response-content"/>
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
 
 	<xd:doc>
@@ -254,17 +270,29 @@
 		<xsl:param name="typeOfAncestor" tunnel="yes"/>
 		<xsl:variable name="nameOfVariable" select="enofodt:get-business-name($source-context)"/>
 
-		<xsl:if test="$typeOfAncestor != ''">
-			<text:p text:style-name="Format">
-				<text:span text:style-name="NameOfVariable">
-					<xsl:value-of select="concat('[', $nameOfVariable, '] - ')"/>
-				</text:span>
-				<xsl:value-of select="'Booléen'"/>
-			</text:p>
-		</xsl:if>
-		<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-			<xsl:with-param name="driver" select="." tunnel="yes"/>
-		</xsl:apply-templates>
+		<xsl:variable name="response-content" as="node()*">
+			<xsl:if test="$typeOfAncestor != ''">
+				<text:p text:style-name="Format">
+					<text:span text:style-name="NameOfVariable">
+						<xsl:value-of select="concat('[', $nameOfVariable, '] - ')"/>
+					</text:span>
+					<xsl:value-of select="'Booléen'"/>
+				</text:p>
+			</xsl:if>
+			<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
+				<xsl:with-param name="driver" select="." tunnel="yes"/>
+			</xsl:apply-templates>
+		</xsl:variable>
+		<xsl:choose>
+			<xsl:when test="$typeOfAncestor != 'question' and not(ancestor::Clarification)">
+				<table:table-cell table:number-rows-spanned="1" table:number-columns-spanned="1" table:style-name="Table.Cell">
+					<xsl:copy-of select="$response-content"/>
+				</table:table-cell>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:copy-of select="$response-content"/>
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
 
 	<xd:doc>
@@ -281,18 +309,29 @@
 		<xsl:variable name="maximumLengthCode" select="enofodt:get-code-maximum-length($source-context)"/>
 		<xsl:variable name="nameOfVariable" select="enofodt:get-business-name($source-context)"/>
 
-		<xsl:if test="$maximumLengthCode != ''">
-			<text:p text:style-name="Format">
-				<text:span text:style-name="NameOfVariable">
-					<xsl:value-of select="concat('[', $nameOfVariable, '] - ')"/>
-				</text:span>
-				<xsl:value-of select="concat('Car ', $maximumLengthCode, ' - ', 'liste de modalités')"/>
-			</text:p>
-		</xsl:if>
-
-		<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-			<xsl:with-param name="driver" select="." tunnel="yes"/>
-		</xsl:apply-templates>
+		<xsl:variable name="response-content" as="node()*">
+			<xsl:if test="$maximumLengthCode != ''">
+				<text:p text:style-name="Format">
+					<text:span text:style-name="NameOfVariable">
+						<xsl:value-of select="concat('[', $nameOfVariable, '] - ')"/>
+					</text:span>
+					<xsl:value-of select="concat('Car ', $maximumLengthCode, ' - ', 'liste de modalités')"/>
+				</text:p>
+			</xsl:if>
+			<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
+				<xsl:with-param name="driver" select="." tunnel="yes"/>
+			</xsl:apply-templates>
+		</xsl:variable>
+		<xsl:choose>
+			<xsl:when test="$typeOfAncestor != 'question' and not(ancestor::Clarification)">
+				<table:table-cell table:number-rows-spanned="1" table:number-columns-spanned="1" table:style-name="Table.Cell">
+					<xsl:copy-of select="$response-content"/>
+				</table:table-cell>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:copy-of select="$response-content"/>
+			</xsl:otherwise>
+		</xsl:choose>
 	</xsl:template>
 
 	<xd:doc>
@@ -352,85 +391,50 @@
 					<xsl:value-of select="concat('Nb line(s) maximum allowed : ', $nbMaximumLines)"/>
 				</text:p>
 			</xsl:if>
-			<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-				<xsl:with-param name="driver" select="." tunnel="yes"/>
-			</xsl:apply-templates>
 		</text:section>
 	</xsl:template>
 
 	<xd:doc>
 		<xd:desc>
-			<xd:p>Match on the TextCell driver.</xd:p>
+			<xd:p>Match on the table headers drivers.</xd:p>
 			<xd:p>It displays the headers on the top and the left.</xd:p>
 		</xd:desc>
 	</xd:doc>
-	<xsl:template match="TextCell" mode="model">
+	<xsl:template match="CodeDimension | *[name()='CodeList' or name()='Code'][not(ancestor::CodeDomain) and not(ancestor::BooleanDomain)]" mode="model">
 		<xsl:param name="source-context" as="item()" tunnel="yes"/>
 		<xsl:param name="ancestorTable" tunnel="yes"/>
 		<xsl:param name="languages" tunnel="yes"/>
+
 		<xsl:variable name="col-span" select="number(enofodt:get-colspan($source-context))"/>
 		<xsl:variable name="row-span" select="number(enofodt:get-rowspan($source-context))"/>
+		<xsl:variable name="label" select="enofodt:get-label($source-context, $languages)"/>
 
-		<xsl:if test="$ancestorTable != ''">
-			<table:table-cell table:number-rows-spanned="{$row-span}"
-				table:number-columns-spanned="{$col-span}" table:style-name="Table.Cell">
-				<xsl:variable name="label" select="enofodt:get-label($source-context, $languages)"/>
+		<table:table-cell table:number-rows-spanned="{$row-span}" table:number-columns-spanned="{$col-span}" table:style-name="Table.Cell">
+			<xsl:if test="$label != '' and (not(self::CodeList) or enofodt:is-codelist-label-shown($source-context))">
 				<xsl:choose>
-					<xsl:when test="$label != '' and $ancestorTable = 'line'">
+					<xsl:when test="$ancestorTable = 'line'">
 						<text:p text:style-name="Question">
 							<xsl:value-of select="$label"/>
 						</text:p>
 					</xsl:when>
-					<xsl:when test="$label != '' and $ancestorTable = 'headerLine'">
+					<xsl:when test="$ancestorTable = 'headerLine'">
 						<text:p text:style-name="ColumnHeader">
 							<xsl:value-of select="$label"/>
 						</text:p>
 					</xsl:when>
-				</xsl:choose>
-			</table:table-cell>
-			<!-- To add spanned rows / columns -->
-			<xsl:if test="$row-span &gt; 1">
-				<xsl:for-each select="2 to xs:integer(floor($row-span))">
-					<table:covered-table-cell table:style-name="Table.Cell"/>
-				</xsl:for-each>
+				</xsl:choose>				
 			</xsl:if>
-			<xsl:if test="$col-span &gt; 1">
-				<xsl:for-each select="2 to xs:integer(floor($col-span))">
-					<table:covered-table-cell table:style-name="Table.Cell"/>
-				</xsl:for-each>
-			</xsl:if>
+		</table:table-cell>
+		<!-- To add spanned rows / columns -->
+		<xsl:if test="$row-span &gt; 1">
+			<xsl:for-each select="2 to xs:integer(floor($row-span))">
+				<table:covered-table-cell table:style-name="Table.Cell"/>
+			</xsl:for-each>
 		</xsl:if>
-	</xsl:template>
-
-	<xd:doc>
-		<xd:desc>
-			<xd:p>Match on the Cell driver.</xd:p>
-			<xd:p>Create a cell and call templates for children to fill the cell.</xd:p>
-		</xd:desc>
-	</xd:doc>
-	<xsl:template match="Cell" mode="model">
-		<xsl:param name="source-context" as="item()" tunnel="yes"/>
-		<xsl:param name="ancestorTable" tunnel="yes"/>
-		<xsl:param name="languages" tunnel="yes"/>
-		<xsl:variable name="col-span" select="number(enofodt:get-colspan($source-context))"/>
-		<xsl:variable name="row-span" select="number(enofodt:get-rowspan($source-context))"/>
-		<xsl:if test="$ancestorTable != ''">
-			<table:table-cell table:number-rows-spanned="{$row-span}" table:number-columns-spanned="{$col-span}" table:style-name="Table.Cell">
-				<xsl:apply-templates select="eno:child-fields($source-context)" mode="source">
-					<xsl:with-param name="driver" select="." tunnel="yes"/>
-				</xsl:apply-templates>
-			</table:table-cell>
-			<!-- To add spanned rows / columns -->
-			<xsl:if test="$row-span &gt; 1">
-				<xsl:for-each select="2 to xs:integer(floor($row-span))">
-					<table:covered-table-cell table:style-name="Table.Cell"/>
-				</xsl:for-each>
-			</xsl:if>
-			<xsl:if test="$col-span &gt; 1">
-				<xsl:for-each select="2 to xs:integer(floor($col-span))">
-					<table:covered-table-cell table:style-name="Table.Cell"/>
-				</xsl:for-each>
-			</xsl:if>
+		<xsl:if test="$col-span &gt; 1">
+			<xsl:for-each select="2 to xs:integer(floor($col-span))">
+				<table:covered-table-cell table:style-name="Table.Cell"/>
+			</xsl:for-each>
 		</xsl:if>
 	</xsl:template>
 
@@ -469,13 +473,12 @@
 
 	<xd:doc>
 		<xd:desc>
-			<xd:p>Match on the xf-item driver.</xd:p>
+			<xd:p>Match on the Code driver, when in Response.</xd:p>
 			<xd:p>It writes the code value and the label of the item.</xd:p>
 		</xd:desc>
 	</xd:doc>
-	<xsl:template match="xf-item" mode="model">
+	<xsl:template match="Code[ancestor::CodeDomain or ancestor::BooleanDomain]" mode="model">
 		<xsl:param name="source-context" as="item()" tunnel="yes"/>
-		<xsl:param name="ancestorTable" tunnel="yes"/>
 		<xsl:param name="languages" tunnel="yes"/>
 		<xsl:variable name="label" select="enofodt:get-label($source-context, $languages[1])"/>
 
