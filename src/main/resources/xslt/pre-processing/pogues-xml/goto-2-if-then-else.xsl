@@ -462,7 +462,6 @@
                 </xsl:if>
             </xsl:for-each>
         </xsl:for-each>
-
         <xsl:copy>
             <xsl:copy-of select="@* | text() | processing-instruction()"/>
             <xsl:if test="$debug">
